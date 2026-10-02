@@ -8,6 +8,32 @@ on the server, and there's a shared leaderboard.
 > **Play money only.** Credits are virtual and have no cash value. There's no
 > real-money betting, purchases or payouts.
 
+## Build status
+
+| Phase | Status |
+|---|---|
+| 1. Foundation (repo, name login, player switching) | ✅ Done |
+| 2. Core engine (server spins, paylines, reels, RTP simulator, tests) | ✅ Done |
+| 3. First theme + celebrations + free spins | ✅ Done |
+| 4. Per-player jackpots, Jackpot Wheel, live feed | ✅ Done |
+| 5. Remaining themes | ✅ Done (all 6, with emoji art for now) |
+| 6. Stats, leaderboards, Hall of Fame, achievements, daily bonus | ✅ Done |
+| 7. Polish & launch | 🟡 Mobile layout, settings and Railway config done; deploy and custom art still to do |
+
+**Changes from the original stack (and why):**
+- **Reels:** a custom DOM/GPU-transform engine instead of PixiJS. Smooth at 60fps,
+  much smaller, and the CSS glow/blur effects look great with emoji symbols.
+- **Particles:** a small custom canvas system (coins, confetti, fireworks, emoji)
+  instead of Pixi emitters + canvas-confetti.
+- **Sound:** synthesized with the Web Audio API instead of Howler.js audio files,
+  so there are no assets to source. Real music/SFX can be added later.
+- **Styling:** plain CSS with theme variables instead of Tailwind.
+- **Live updates:** Server-Sent Events instead of WebSockets (one-way is all we need).
+- **Art:** themed emoji on styled tiles for now; swap in generated artwork later
+  by changing `shared/themes.ts` and the symbol renderer.
+- **Math:** bets are 20–1,000 (so a line bet is always a whole number), and RTP
+  is ~95% (verified with `npm run simulate`).
+
 ---
 
 ## 1. Goals

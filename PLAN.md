@@ -16,7 +16,7 @@ on the server, and there's a shared leaderboard.
 |---|---|
 | Great modern graphics | GPU-rendered reels (WebGL), smooth 60fps animation, glow/blur/particle effects, responsive on phone and desktop |
 | Several themes | 6 themes at launch, each with its own symbols, background, colors, music and sound effects |
-| Large jackpots | 4-tier progressive jackpot (Mini / Minor / Major / **GRAND**) shared by all friends and growing with every spin |
+| Large jackpots | 4-tier progressive jackpot (Mini / Minor / Major / **GRAND**), separate for each player and growing with every spin they make |
 | Celebrations | Tiered win animations: Nice Win → Big Win → Mega Win → Epic Win → Jackpot (coin showers, fireworks, screen shake, count-up meters) |
 | Easy access | One public URL, no install, works in any modern browser |
 | No passwords | Enter a name to play; the browser remembers you |
@@ -56,9 +56,9 @@ so the whole game is **one deployable service with one URL**.
    of existing players to pick from, or lets a new one be added.
 5. Names are unique (case-insensitive) so stats aren't split across "Ron" and "ron".
 
-Because it's just for friends, this is intentionally low-security: anyone who
-knows a name can pick it from the switch-player list. That's a fair trade for
-"no password necessary." (Optional later: a 4-digit PIN per player.)
+Because it's just for friends, this is intentionally low-security: anyone can
+pick any name from the switch-player list. That's the agreed trade-off for
+"no password necessary" — no PINs.
 
 ---
 
@@ -67,14 +67,26 @@ knows a name can pick it from the switch-player list. That's a fair trade for
 Each theme is a self-contained **theme pack**: a config file plus art and audio.
 Adding a theme later means adding a folder — no engine changes.
 
-| Theme | Look & feel | Example symbols (low → high) | Special |
+| Theme | Look & feel | Example symbols (low → high) | Signature win effect |
 |---|---|---|---|
-| **Neon Vegas** | Dark purple, hot pink/cyan neon tubes, flicker | 🍒 🍋 🔔 BAR 7 ⭐ | Classic 7s line, neon sign light-up on wins |
-| **Ocean Treasure** | Deep blue gradients, light rays, bubbles | Shells, starfish, fish, turtle, mermaid, treasure chest | Bubbles burst from winning symbols |
-| **Cosmic Galaxy** | Starfield parallax, nebula colors | Planets, rockets, UFO, astronaut, black hole | Warp-speed reel spin effect |
-| **Candy Land** | Pastels, glossy candy, sprinkles | Gummies, lollipops, cupcakes, donuts, candy crown | Sprinkle confetti, jelly wobble wins |
-| **Pharaoh's Gold** | Sandstone & gold, torch glow | Ankh, scarab, Eye of Ra, Anubis, Pharaoh | Golden dust trails |
-| **Dragon's Fire** | Red/orange embers, smoke | Gems, shields, swords, dragon egg, dragon | Fire-breath sweep across big wins |
+| **Beach Paradise** | Turquoise water, golden sand, sunset gradient, swaying palms | Seashells, flip-flops, beach ball, surfboard, cocktail, sun | Wave sweeps across the reels, splash particles |
+| **Campaign Trail** (Politics) | Red/white/blue bunting, spotlights, confetti cannons | Ballot box, campaign button, gavel, podium, donkey & elephant, the Capitol | Balloon drop + confetti cannon, "LANDSLIDE!" banner |
+| **Semper Fi** (Marines) | Camo greens, desert tan, dog-tag metal, stars & stripes | Dog tags, boots, helmet, compass, bulldog mascot, eagle | Jet flyover streak, salute-style banner, bugle fanfare |
+| **Royal Court** (Kings) | Crimson velvet, gold filigree, castle backdrop | Goblet, shield, sword, scepter, crown, the King | Golden crown drops onto the win, trumpet fanfare |
+| **High Stakes** (Cards) | Green felt, gold trim, casino lighting | 10, J, Q, K, A, chip stack, Royal Flush | Cards fan out and flip, chip avalanche |
+| **Walk of Fame** (Famous People) | Hollywood red carpet, paparazzi flashes, marquee lights | Film reel, microphone, sunglasses, star plaque, golden statuette, caricature "stars" | Camera-flash storm, spotlights, red-carpet roll-out |
+
+**Notes on a few themes:**
+- **Politics** stays bipartisan and playful (both donkey and elephant, no
+  real candidates) so it's fun for everyone in the group.
+- **Famous People** uses **caricature archetypes** (the Rock Star, the Movie
+  Star, the Diva, the Tycoon…) rather than real celebrities' faces or names —
+  AI image tools generally won't produce real-person likenesses, and it avoids
+  likeness-rights issues. If there are specific in-joke "stars" in the friend
+  group, those can be added as cartoon versions.
+- **Marines** uses generic Marine-inspired imagery (bulldog, eagle, dog tags,
+  camo) rather than the official Eagle, Globe & Anchor emblem, which is a
+  protected trademark.
 
 Every theme shares the same special symbols, reskinned:
 - **WILD** — substitutes for any regular symbol
@@ -101,7 +113,7 @@ stays lightweight.
 - **Jackpot Wheel bonus:** rare trigger; spinning prize wheel lands on a jackpot tier
 - **Turbo mode** and **Autoplay** (10/25/50/100 spins, stops on big wins)
 
-### Progressive Jackpots (shared across all friends)
+### Progressive Jackpots (separate for each player)
 | Tier | Seed value | Grows by | Approx. odds per spin |
 |---|---|---|---|
 | Mini | 1,000 | 0.5% of each bet | ~1 in 150 |
@@ -109,9 +121,14 @@ stays lightweight.
 | Major | 100,000 | 0.15% | ~1 in 15,000 |
 | **GRAND** | **1,000,000** | 0.05% | ~1 in 150,000 |
 
-Jackpot meters are shown live at the top of the screen and tick upward in
-real time as anyone plays. When someone hits one, **every connected player sees
-a broadcast banner** ("🎉 Ron just won the MAJOR jackpot: 143,250!").
+Each player has **their own four jackpot pools**. They grow only from that
+player's bets, are shown at the top of their screen, tick upward with every
+spin, and reset to the seed value when won. Pools are per player across all
+themes (one set of meters, not one per theme).
+
+Even though pools are private, wins are social: when someone hits a jackpot,
+**every connected friend sees a broadcast banner** ("🎉 Ron just won the
+MAJOR jackpot: 143,250!") and it's added to the Hall of Fame.
 
 ### Target payout
 - **~96% return-to-player**, with frequent small wins and rare huge ones
@@ -156,7 +173,7 @@ setting (no shake/flashing) for accessibility.
 - Recent spin history (last 100 spins with result, bet, win)
 
 ### Screens
-- **Profile / My Stats** — stat cards + a balance-over-time line chart
+- **Profile / My Stats** — stat cards, current jackpot pool values, and a balance-over-time line chart
 - **Leaderboard** — tabs for Biggest Win, Most Won, Most Spins, Jackpots
 - **Hall of Fame** — every jackpot ever hit: who, tier, amount, theme, when
 - **Live feed** — sidebar ticker of friends' big wins as they happen
@@ -172,14 +189,14 @@ Badges like "First Spin", "Big Winner", "Jackpot Hunter", "Theme Explorer
 ```
 Browser (React + PixiJS)
    │  REST: login, spin, stats, leaderboard
-   │  WebSocket: live jackpot values, win broadcasts
+   │  WebSocket: win broadcasts, live feed
    ▼
 Fastify server (Node.js)
    ├── /api/players      create/find player by name → token
    ├── /api/spin         validates bet & balance, runs RNG, returns result
    ├── /api/stats/:id    player stats & history
    ├── /api/leaderboard  ranked lists
-   ├── /api/jackpots     current jackpot values
+   ├── /api/jackpots     the player's own jackpot values
    ├── /ws               live updates
    └── serves the built frontend (static files)
    ▼
@@ -189,7 +206,7 @@ SQLite database (on a persistent volume)
 ### Database tables
 - `players` — id, name, token, avatar, color, balance, created_at, last_seen
 - `spins` — id, player_id, theme, bet, win, result grid (JSON), feature, created_at
-- `jackpots` — tier, current_value, seed_value, last_won_by, last_won_at
+- `jackpots` — player_id, tier, current_value, seed_value, last_won_at
 - `jackpot_wins` — id, player_id, tier, amount, theme, created_at
 - `player_stats` — rolled-up totals per player (updated on each spin for fast reads)
 - `achievements` — player_id, badge, earned_at
@@ -228,23 +245,23 @@ SQLite database (on a persistent volume)
 - Unit tests for payline evaluation and payouts
 
 ### Phase 3 — First theme, fully polished
-- **Neon Vegas** complete: art, background, sounds, music
+- **Beach Paradise** complete: art, background, sounds, music
 - Full celebration system (all 5 tiers)
 - Free spins feature
 
 ### Phase 4 — Jackpots & live features
-- 4-tier progressive jackpot with live meters (WebSocket)
+- 4-tier per-player progressive jackpot with live meters
 - Jackpot Wheel bonus and the jackpot celebration sequence
-- Server-wide win broadcasts and live feed
+- Win broadcasts to all friends and live feed (WebSocket)
 
 ### Phase 5 — Remaining themes
 - Theme picker lobby with animated preview cards
-- Ocean Treasure, Cosmic Galaxy, Candy Land, Pharaoh's Gold, Dragon's Fire
+- Campaign Trail, Semper Fi, Royal Court, High Stakes, Walk of Fame
 
 ### Phase 6 — Stats & social
 - Profile/stats page with charts
 - Leaderboards, Hall of Fame, achievements
-- Daily bonus
+- Daily bonus (5,000 credits)
 
 ### Phase 7 — Polish & launch
 - Mobile layout and touch controls, loading screen, settings (sound, reduce motion)
@@ -268,12 +285,12 @@ Cost for a handful of friends should fit within Railway's hobby tier.
 
 ---
 
-## 11. Open Questions
+## 11. Decisions
 
-1. **Starting balance & daily bonus** — are 10,000 credits and 5,000/day right?
-2. **Shared vs. per-player jackpots** — the plan uses shared pools (more
-   exciting with friends); per-player pools are the alternative.
-3. **Optional PIN** — fine with "pick your name from a list," or add a 4-digit PIN?
-4. **Hosting** — is Railway OK, or is there a preferred host/domain?
-5. **Theme wishes** — any themes to swap in (sports team, holiday, a friend
-   group inside joke)?
+| Question | Decision |
+|---|---|
+| Starting balance & daily bonus | 10,000 credits to start, 5,000 daily bonus |
+| Jackpot pools | **Separate per player** (wins still broadcast to friends) |
+| Login | Pick your name from a list; no password or PIN |
+| Hosting | Railway |
+| Themes | Beach Paradise, Campaign Trail (Politics), Semper Fi (Marines), Royal Court (Kings), High Stakes (Cards), Walk of Fame (Famous People) |

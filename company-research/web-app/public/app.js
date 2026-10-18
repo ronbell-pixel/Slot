@@ -177,6 +177,8 @@ async function* readEvents(body) {
 }
 
 function addLog({ type, message }) {
+  // Parallel searches can report the same query twice; show it once.
+  if (el.log.lastElementChild?.textContent === message) return;
   const li = document.createElement('li');
   li.className = type;
   li.textContent = message;

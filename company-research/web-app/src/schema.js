@@ -16,7 +16,7 @@ const field = (description) => ({
   additionalProperties: false,
   required: ['value', 'source_ids'],
   properties: {
-    value: { type: ['string', 'null'], description: `${description} null when not found.` },
+    value: { type: 'string', description: `${description} Empty string when not found.` },
     source_ids: sourceIds,
   },
 });
@@ -51,8 +51,8 @@ export const REPORT_SCHEMA = {
         required: ['name', 'state', 'status', 'reason'],
         properties: {
           name: { type: 'string' },
-          state: { type: ['string', 'null'] },
-          status: { type: ['string', 'null'] },
+          state: { type: 'string' },
+          status: { type: 'string' },
           reason: { type: 'string', description: 'Why it is or is not the likely match.' },
         },
       },
@@ -69,9 +69,9 @@ export const REPORT_SCHEMA = {
         required: ['name', 'title', 'business_contact', 'source_ids'],
         properties: {
           name: { type: 'string' },
-          title: { type: ['string', 'null'] },
+          title: { type: 'string' },
           business_contact: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Publicly listed business email/phone only. Never personal contact details.',
           },
           source_ids: sourceIds,
@@ -87,10 +87,10 @@ export const REPORT_SCHEMA = {
         required: ['type', 'issuer', 'number', 'status', 'expiration', 'source_ids'],
         properties: {
           type: { type: 'string' },
-          issuer: { type: ['string', 'null'] },
-          number: { type: ['string', 'null'] },
-          status: { type: ['string', 'null'] },
-          expiration: { type: ['string', 'null'] },
+          issuer: { type: 'string' },
+          number: { type: 'string' },
+          status: { type: 'string' },
+          expiration: { type: 'string' },
           source_ids: sourceIds,
         },
       },
@@ -123,7 +123,7 @@ export const REPORT_SCHEMA = {
             additionalProperties: false,
             required: ['date', 'headline', 'source_ids'],
             properties: {
-              date: { type: ['string', 'null'] },
+              date: { type: 'string' },
               headline: { type: 'string' },
               source_ids: sourceIds,
             },
@@ -152,8 +152,8 @@ export const REPORT_SCHEMA = {
       properties: {
         method: { type: 'string', enum: ['registry_api', 'web_search', 'not_checked'] },
         outcome: { type: 'string', enum: ['match', 'no_match', 'unavailable'] },
-        entity_id: { type: ['string', 'null'], description: 'The registry entity / document / file number.' },
-        registry_url: { type: ['string', 'null'], description: 'Official registry page for the entity.' },
+        entity_id: { type: 'string', description: 'The registry entity / document / file number.' },
+        registry_url: { type: 'string', description: 'Official registry page for the entity.' },
       },
     },
     sources: {
@@ -172,6 +172,19 @@ export const REPORT_SCHEMA = {
     },
   },
 };
+
+// The API caps strict schemas at 16 nullable/union fields, so "unknown" is sent as an
+// empty string and turned back into null here. Empty items are dropped from string lists.
+export function normalizeReport(value) {
+  if (typeof value === 'string') return value.trim() === '' ? null : value;
+  if (Array.isArray(value)) {
+    return value.map(normalizeReport).filter((v) => v !== null);
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, normalizeReport(v)]));
+  }
+  return value;
+}
 
 // Strict tool use guarantees the shape when the model finishes normally, but the input
 // can still arrive truncated (max_tokens) or malformed while eager streaming is on.

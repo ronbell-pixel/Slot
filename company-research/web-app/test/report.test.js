@@ -82,3 +82,21 @@ test('status tone', () => {
   assert.equal(statusTone('Inactive'), 'bad');
   assert.equal(statusTone('Pending'), 'warn');
 });
+
+test('strict schema stays under the API limit of 16 union-typed fields', () => {
+  let unions = 0;
+  const walk = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node.type) || node.anyOf) unions++;
+    Object.values(node.properties || {}).forEach(walk);
+    if (node.items) walk(node.items);
+  };
+  walk(REPORT_SCHEMA);
+  assert.ok(unions <= 16, `${unions} union-typed fields`);
+});
+
+test('normalizeReport turns empty strings into null and drops empty list items', async () => {
+  const { normalizeReport } = await import('../src/schema.js');
+  const out = normalizeReport({ a: { value: '  ', source_ids: [] }, b: ['x', ''], c: 'keep', n: 3 });
+  assert.deepEqual(out, { a: { value: null, source_ids: [] }, b: ['x'], c: 'keep', n: 3 });
+});

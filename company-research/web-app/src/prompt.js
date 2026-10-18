@@ -13,9 +13,9 @@ How to research
 5. Flag verification concerns as risk_flags: inactive/dissolved/forfeited status, formation in the last 2 years, a name or address that does not match what the user provided, an address that is only a registered agent or virtual office, conflicting records, public lawsuits, liens, bankruptcies, or regulatory actions you find.
 
 Rules
-- Never guess or fabricate. A field you could not confirm is null, and notes say what is missing.
-- Every non-null field cites at least one source id. Prefer official sources over third-party ones; when they conflict, use the official value and note the conflict.
-- Tax ID / EIN only when a public source shows it. Otherwise leave it null and add the note "Tax ID/EIN not found in public sources."
+- Never guess or fabricate. A field you could not confirm is an empty string, and notes say what is missing.
+- Every non-empty field cites at least one source id. Prefer official sources over third-party ones; when they conflict, use the official value and note the conflict.
+- Tax ID / EIN only when a public source shows it. Otherwise leave it empty and add the note "Tax ID/EIN not found in public sources."
 - People: list officers, owners, or executives named in public records. Include only publicly listed business contact details, never personal phone numbers, personal emails, or home addresses.
 - Years in business: compute from the formation date (or the earliest reliable source, saying which) as of today's date given in the request.
 - Confidence: High when an official registry record matches the inputs; Medium when the match relies on secondary sources or has small inconsistencies; Low when the identity is uncertain.

@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { readFile } from 'node:fs/promises';
-import { REPORT_SCHEMA, validateReport } from './schema.js';
+import { REPORT_SCHEMA, validateReport, normalizeReport } from './schema.js';
 import { systemPrompt, buildUserMessage } from './prompt.js';
 import { sosSearch, sosConfigured, SEARCH_BY } from './sosfinder.js';
 import { addUsage } from './usage.js';
@@ -144,14 +144,15 @@ async function runResearch(input, { onProgress = () => {}, signal } = {}, spend)
 
     const call = response.content.find((b) => b.type === 'tool_use' && b.name === REPORT_TOOL);
     if (call) {
-      const problems = validateReport(call.input);
+      const report = normalizeReport(call.input);
+      const problems = validateReport(report);
       if (problems.length) {
         throw new ResearchError(`The report came back incomplete (${problems.slice(0, 3).join('; ')}). Try again.`, {
           code: 'invalid_report',
         });
       }
       return {
-        report: call.input,
+        report,
         meta: {
           model: response.model,
           checked_at: new Date().toISOString(),
@@ -184,7 +185,7 @@ async function runResearch(input, { onProgress = () => {}, signal } = {}, spend)
     nudged = true;
     messages.push({
       role: 'user',
-      content: `Call ${REPORT_TOOL} now with your findings. Use null for anything you could not confirm.`,
+      content: `Call ${REPORT_TOOL} now with your findings. Use an empty string for anything you could not confirm.`,
     });
   }
 

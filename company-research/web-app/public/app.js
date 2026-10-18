@@ -14,6 +14,7 @@ const el = {
   empty: $('empty'), progress: $('progress'), progressTitle: $('progress-title'), log: $('progress-log'),
   cancel: $('cancel-btn'), error: $('error'), errorText: $('error-text'), report: $('report'),
   history: $('history'), clearHistory: $('clear-history'), registryStatus: $('registry-status'),
+  userBar: $('user-bar'), userName: $('user-name'), userUsage: $('user-usage'), switchUser: $('switch-user'),
 };
 
 // ---------- storage (per-browser convenience only) ----------
@@ -39,32 +40,35 @@ function saveHistory(items) {
 }
 
 // ---------- access gate ----------
+let config = { accessCodeRequired: false };
+let session = null; // { user, monthlyLimit, usedThisMonth } once a code is accepted
+
 async function init() {
-  let config = { accessCodeRequired: false };
   try { config = await (await fetch('/api/config')).json(); } catch { /* assume open */ }
-  if (config.accessCodeRequired && !(await verify(accessCode))) {
-    el.gate.hidden = false;
-    el.gateCode.focus();
-    return;
+  if (config.accessCodeRequired) {
+    session = await verify(accessCode);
+    if (!session) {
+      el.gate.hidden = false;
+      el.gateCode.focus();
+      return;
+    }
   }
   showApp();
-  if (config.registryConnected) {
-    el.registryStatus.textContent = 'State registry data connected (SOS Finder)';
-    el.registryStatus.hidden = false;
-  }
 }
 
 async function verify(code) {
-  if (!code) return false;
+  if (!code) return null;
   const r = await fetch('/api/verify-access', { method: 'POST', headers: { 'x-access-code': code } });
-  return r.ok;
+  return r.ok ? r.json() : null;
 }
 
 el.gateForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const code = el.gateCode.value.trim();
-  if (await verify(code)) {
+  const result = await verify(code);
+  if (result) {
     accessCode = code;
+    session = result;
     store.set(CODE_KEY, code);
     el.gate.hidden = true;
     showApp();
@@ -74,8 +78,28 @@ el.gateForm.addEventListener('submit', async (e) => {
   }
 });
 
+el.switchUser.addEventListener('click', () => {
+  store.remove(CODE_KEY);
+  location.reload();
+});
+
+function renderUser() {
+  if (!session?.user) return;
+  const used = session.monthlyLimit
+    ? ` · ${session.usedThisMonth} of ${session.monthlyLimit} lookups this month`
+    : ` · ${session.usedThisMonth} lookup${session.usedThisMonth === 1 ? '' : 's'} this month`;
+  el.userName.textContent = session.user;
+  el.userUsage.textContent = used;
+  el.userBar.hidden = false;
+}
+
 function showApp() {
   el.app.hidden = false;
+  renderUser();
+  if (config.registryConnected) {
+    el.registryStatus.textContent = 'State registry data connected (SOS Finder)';
+    el.registryStatus.hidden = false;
+  }
   renderHistory();
 }
 
@@ -113,6 +137,7 @@ async function runResearch(input) {
       else if (event === 'error') throw new Error(data.error);
       else if (event === 'report') {
         finished = true;
+        if (session) { session.usedThisMonth++; renderUser(); }
         const entry = { id: Date.now(), ...data };
         saveHistory([entry, ...loadHistory()].slice(0, HISTORY_MAX));
         renderHistory();

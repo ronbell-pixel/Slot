@@ -4,7 +4,7 @@ A branded web app anyone can open from a link. It runs on Claude with live web s
 
 - **Stack:** Node 22, Fastify, `@anthropic-ai/sdk`, plain HTML/CSS/JS (no build step), pdfmake for text-based PDFs.
 - **Data sources:** official Secretary of State records through **SOS Finder** (when `SOS_API_KEY` is set), plus free public sources reached through Claude's web search: company websites, SEC EDGAR, IRS exempt-organization data, licensing boards, the NPI Registry and news.
-- **Sharing:** a public URL, optionally protected by a team access code (`ACCESS_CODE`).
+- **Sharing:** a public URL protected by access codes. Each person can have their own code (`ACCESS_CODES`), and a usage page at `/admin.html` (opened with `ADMIN_CODE`) shows lookups, SOS Finder credits and estimated Claude cost per person, with a CSV download.
 
 ## Run locally
 
@@ -40,7 +40,15 @@ The health check is at `/api/health`, and Railway's settings come from `railway.
 2. The server streams progress back as Server-Sent Events (each search query and page read), so the user sees work happening during the 1–3 minutes a lookup takes.
 3. Claude (`claude-opus-5-5`, adaptive thinking, effort `medium`) first calls `state_registry_search`, which the server answers from SOS Finder (`src/sosfinder.js`). The key never leaves the server, results are trimmed to the fields the report uses, repeat searches are cached for 24 hours, and each report may use at most 3 registry credits. If the registry has no match, is blocked, or SOS Finder isn't configured, Claude falls back to web search and the report says so. Claude then uses web search and web fetch for everything else, and calls a `submit_company_report` tool whose JSON schema is defined in `src/schema.js`. That structured report drives the on-screen view, the PDF and the copy-as-text output. The same structure is what batch CSV and CRM push will use later.
 4. If Claude's safety filter declines a request, server-side fallback (`fallbacks: "default"`) retries it on another model.
-5. Recent lookups are saved in the user's browser only (localStorage). Nothing is stored on the server.
+5. Recent lookups are saved in the user's browser only (localStorage). The server keeps only a usage log (who, when, company name, result, credits and estimated cost) in `DATA_DIR/usage.jsonl`, not the reports themselves.
+
+## Access codes and usage tracking
+
+- **Per-person codes:** set `ACCESS_CODES` to `Name=code` pairs separated by `;`, for example `Ron=nw-8f3k2;Jane Doe=nw-q7x1m`. To add, change or remove someone, edit the variable; Railway redeploys in about a minute. Removing a person's code locks them out immediately and keeps their past usage.
+- **Shared code (optional):** `ACCESS_CODE` still works and is tracked as "Team".
+- **Usage page:** open `/admin.html` and enter `ADMIN_CODE`. It shows each person's lookups, failures, SOS Finder credits and estimated Claude cost by month, recent lookups, and a CSV download.
+- **Monthly cap (optional):** `USER_MONTHLY_LIMIT` limits how many lookups each person can run per month. People see "N of 25 lookups this month" under their name.
+- **Storage:** the usage log lives in `DATA_DIR`. On Railway it's a mounted volume (`/data`), so it survives redeploys.
 
 ## Cost
 
@@ -52,12 +60,14 @@ The health check is at `/api/health`, and Railway's settings come from `railway.
 
 | Path | Purpose |
 |---|---|
-| `server.js` | HTTP server, access code check, rate limit, SSE streaming |
+| `server.js` | HTTP server, access codes, rate and monthly limits, SSE streaming, usage API |
+| `src/access.js` | Per-person access code parsing and matching |
+| `src/usage.js` | Usage log (JSONL), per-person summaries, cost estimates |
 | `src/research.js` | Claude call loop (web tools, registry tool, pause/resume, report tool) |
 | `src/sosfinder.js` | SOS Finder client: trimming, 24-hour cache, error handling |
 | `src/prompt.js` | System prompt and per-request message |
 | `src/schema.js` | Report JSON schema and validation |
-| `public/` | UI (`index.html`, `app.js`, `styles.css`), PDF builder (`pdf.js`), shared field list (`report-fields.js`) |
+| `public/` | UI (`index.html`, `app.js`, `styles.css`), usage page (`admin.html`, `admin.js`), PDF builder (`pdf.js`), shared field list (`report-fields.js`) |
 | `test/` | Unit tests and a fictional sample report |
 
 ## Planned next

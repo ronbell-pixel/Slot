@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { REPORT_SCHEMA, validateReport } from './schema.js';
 import { systemPrompt, buildUserMessage } from './prompt.js';
 import { sosSearch, sosConfigured, SEARCH_BY } from './sosfinder.js';
+import { addUsage } from './usage.js';
 
 const MODEL = process.env.CLAUDE_MODEL || 'claude-opus-5-5';
 const EFFORT = process.env.CLAUDE_EFFORT || 'medium';
@@ -71,14 +72,24 @@ export class ResearchError extends Error {
  * Runs one company lookup. `onProgress` receives {type, message} events
  * (searches, page fetches, phase changes) for the live progress view.
  */
-export async function researchCompany(input, { onProgress = () => {}, signal } = {}) {
-  if (process.env.MOCK_REPORT_FILE) return mockResearch(onProgress);
+export async function researchCompany(input, opts = {}) {
+  if (process.env.MOCK_REPORT_FILE) return mockResearch(opts.onProgress ?? (() => {}));
+  // Usage and registry credits are tracked even when a lookup fails, so the usage log is complete.
+  const spend = { usage: {}, registryCalls: 0 };
+  try {
+    return await runResearch(input, opts, spend);
+  } catch (err) {
+    err.spend = spend;
+    throw err;
+  }
+}
+
+async function runResearch(input, { onProgress = () => {}, signal } = {}, spend) {
   const registry = sosConfigured();
   const tools = toolsFor(registry);
   const system = systemPrompt({ registry });
   const messages = [{ role: 'user', content: buildUserMessage(input) }];
   let nudged = false;
-  let registryCalls = 0;
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const stream = getClient().beta.messages.stream(
@@ -110,6 +121,7 @@ export async function researchCompany(input, { onProgress = () => {}, signal } =
     });
 
     const response = await stream.finalMessage();
+    addUsage(spend.usage, response.usage);
 
     if (response.stop_reason === 'refusal') {
       throw new ResearchError('The research request was declined. Try rephrasing the company details.', {
@@ -143,7 +155,8 @@ export async function researchCompany(input, { onProgress = () => {}, signal } =
         meta: {
           model: response.model,
           checked_at: new Date().toISOString(),
-          usage: response.usage,
+          usage: spend.usage,
+          registry_calls: spend.registryCalls,
         },
       };
     }
@@ -153,8 +166,8 @@ export async function researchCompany(input, { onProgress = () => {}, signal } =
       // All results go back in one user message so parallel calls keep working.
       const results = [];
       for (const use of registryUses) {
-        const output = await runRegistryTool(use.input, { signal, used: registryCalls });
-        if (output.charged) registryCalls++;
+        const output = await runRegistryTool(use.input, { signal, used: spend.registryCalls });
+        if (output.charged) spend.registryCalls++;
         onProgress({ type: 'registry', message: output.summary });
         results.push({
           type: 'tool_result',
@@ -210,5 +223,5 @@ async function mockResearch(onProgress) {
     onProgress({ type: /^(Checking|Registry)/.test(message) ? 'registry' : message.startsWith('Reading') ? 'fetch' : message.startsWith('Searching') ? 'search' : 'phase', message });
   }
   const report = JSON.parse(await readFile(process.env.MOCK_REPORT_FILE, 'utf8'));
-  return { report, meta: { model: 'mock', checked_at: new Date().toISOString(), usage: null } };
+  return { report, meta: { model: 'mock', checked_at: new Date().toISOString(), usage: {}, registry_calls: 1 } };
 }

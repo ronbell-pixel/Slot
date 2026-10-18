@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NextWin Research Usage</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/svg+xml" href="/brand/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .admin { display: grid; gap: 16px; }
+    .admin-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .admin-head h1 { font-size: 22px; }
+    .admin-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .admin-controls select { width: auto; }
+    .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .tile { padding: 16px; }
+    .tile .label { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .tile .value { font-size: 26px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .status-ok { color: var(--teal); font-weight: 600; }
+    .status-failed { color: var(--red); font-weight: 600; }
+    .status-cancelled { color: var(--muted); }
+    .note { font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="/" aria-label="NextWin AI Company Research home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text"><b>NextWin</b> <span class="brand-ai">AI</span></span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-product">Usage</span>
+      </a>
+      <span class="tagline">Work flows. Business grows.</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="gate" class="card gate">
+      <h1>Admin code</h1>
+      <p class="muted">Enter the admin code (Railway variable <code>ADMIN_CODE</code>) to see usage.</p>
+      <form id="gate-form" class="gate-form">
+        <input id="gate-code" type="password" autocomplete="current-password" placeholder="Admin code" required>
+        <button class="btn primary" type="submit">Open</button>
+      </form>
+      <p id="gate-error" class="error-text" hidden></p>
+    </section>
+
+    <div id="admin" class="admin" hidden>
+      <div class="admin-head">
+        <h1>Usage by person</h1>
+        <div class="admin-controls">
+          <select id="month" aria-label="Month"></select>
+          <button id="csv" class="btn ghost small" type="button">Download CSV</button>
+          <button id="lock" class="btn ghost small" type="button">Lock</button>
+        </div>
+      </div>
+      <p id="persist-note" class="disclaimer note" hidden>Usage is stored in temporary storage and resets when the app redeploys. Attach a Railway volume and set <code>DATA_DIR</code> to keep it.</p>
+
+      <div class="tiles">
+        <div class="card tile"><div class="label">Lookups</div><div class="value" id="t-lookups">0</div></div>
+        <div class="card tile"><div class="label">Failed / cancelled</div><div class="value" id="t-failed">0</div></div>
+        <div class="card tile"><div class="label">SOS Finder credits</div><div class="value" id="t-credits">0</div></div>
+        <div class="card tile"><div class="label">Est. Claude cost</div><div class="value" id="t-cost">$0.00</div></div>
+      </div>
+
+      <section class="card">
+        <h2 class="card-title">People</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Person</th><th class="num">Lookups</th><th class="num">Failed</th><th class="num">SOS credits</th><th class="num">Est. Claude cost</th><th>Last used</th></tr></thead>
+            <tbody id="people"></tbody>
+          </table>
+        </div>
+        <p id="limit-note" class="muted small" hidden></p>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">Recent lookups</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>When</th><th>Person</th><th>Company</th><th>State</th><th>Result</th><th class="num">SOS</th><th class="num">Cost</th></tr></thead>
+            <tbody id="recent"></tbody>
+          </table>
+        </div>
+        <p class="muted small">Costs are estimates from token counts at list prices. Your Anthropic Console and SOS Finder dashboard show the actual bills.</p>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="/admin.js"></script>
+</body>
+</html>

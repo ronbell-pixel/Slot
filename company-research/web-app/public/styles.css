@@ -119,6 +119,7 @@ input:focus, select:focus, textarea:focus, button:focus-visible, summary:focus-v
 .registry-status { margin: 10px 0 0; color: var(--teal); font-weight: 600; display: flex; align-items: center; gap: 6px; }
 .registry-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--teal); }
 .progress-log li.registry::before { background: var(--ink); box-shadow: 0 0 0 2px var(--teal); }
+.user-bar { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; padding: 0 4px; margin-bottom: -8px; }
 .soon { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .link-btn { background: none; border: 0; color: var(--teal); font: inherit; font-size: 13px; cursor: pointer; padding: 0; }
 

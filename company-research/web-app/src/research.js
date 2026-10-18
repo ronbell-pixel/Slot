@@ -56,7 +56,9 @@ const REPORT_TOOL_DEF = {
   name: REPORT_TOOL,
   description: 'Submit the finished company research report. Call exactly once, after research is complete.',
   input_schema: REPORT_SCHEMA,
-  strict: process.env.STRICT_TOOL !== 'false',
+  // The full report schema is too large for strict mode's compiled grammar, so the
+  // server validates it instead and gives Claude one chance to fix a bad submission.
+  strict: process.env.STRICT_TOOL === 'true',
   eager_input_streaming: true,
 };
 
@@ -95,6 +97,7 @@ async function runResearch(input, { onProgress = () => {}, signal } = {}, spend)
   const system = systemPrompt({ registry });
   const messages = [{ role: 'user', content: buildUserMessage(input) }];
   let nudged = false;
+  let resubmitted = false;
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const stream = getClient().beta.messages.stream(
@@ -150,6 +153,20 @@ async function runResearch(input, { onProgress = () => {}, signal } = {}, spend)
     if (call) {
       const report = normalizeReport(call.input);
       const problems = validateReport(report);
+      if (problems.length && !resubmitted) {
+        resubmitted = true;
+        onProgress({ type: 'phase', message: 'Fixing report format' });
+        messages.push({
+          role: 'user',
+          content: [{
+            type: 'tool_result',
+            tool_use_id: call.id,
+            is_error: true,
+            content: `The report is incomplete: ${problems.slice(0, 10).join('; ')}. Call ${REPORT_TOOL} again with every required field (use empty strings for unknown values).`,
+          }],
+        });
+        continue;
+      }
       if (problems.length) {
         throw new ResearchError(`The report came back incomplete (${problems.slice(0, 3).join('; ')}). Try again.`, {
           code: 'invalid_report',

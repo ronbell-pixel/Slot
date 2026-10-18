@@ -71,9 +71,10 @@ export function buildUserMessage(input, today = new Date()) {
 
 export function cleanInput(raw = {}) {
   const out = {};
-  for (const key of [...Object.keys(INPUT_LABELS), 'purpose']) {
+  for (const key of [...Object.keys(INPUT_LABELS), 'purpose', 'depth']) {
     const v = raw[key];
     if (typeof v === 'string' && v.trim()) out[key] = v.trim().slice(0, key === 'notes' ? 1000 : 200);
   }
+  if (out.depth !== 'thorough') out.depth = 'standard';
   return out;
 }

@@ -3,7 +3,7 @@ import fastifyStatic from '@fastify/static';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
-import { researchCompany, ResearchError } from './src/research.js';
+import { researchCompany, ResearchError, modelFor, MODELS } from './src/research.js';
 import { cleanInput } from './src/prompt.js';
 import { RateLimiter } from './src/rate-limit.js';
 import { sosConfigured } from './src/sosfinder.js';
@@ -39,6 +39,7 @@ app.get('/api/config', async () => ({
   accessCodeRequired: USERS.length > 0,
   apiKeyConfigured: Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN),
   registryConnected: sosConfigured() || Boolean(process.env.MOCK_REPORT_FILE),
+  models: MODELS,
 }));
 
 app.post('/api/verify-access', async (req, reply) => {
@@ -66,7 +67,7 @@ app.get('/api/admin/usage', async (req, reply) => {
 
 app.get('/api/admin/usage.csv', async (req, reply) => {
   if (!adminOk(req)) return reply.code(401).send({ error: 'Incorrect admin code.' });
-  const cols = ['ts', 'user', 'company', 'state', 'purpose', 'status', 'registryCalls', 'claudeCost', 'error'];
+  const cols = ['ts', 'user', 'company', 'state', 'purpose', 'depth', 'model', 'status', 'registryCalls', 'claudeCost', 'error'];
   const cell = (v) => {
     const t = v === undefined || v === null ? '' : String(v);
     // Quote, and neutralize spreadsheet formulas in user-entered text.
@@ -132,19 +133,19 @@ app.post('/api/research', async (req, reply) => {
   }
 });
 
-const MODEL = process.env.CLAUDE_MODEL || 'claude-opus-5-5';
-
 async function logUsage(user, input, status, usage = {}, registryCalls = 0, error = null) {
+  const model = modelFor(input.depth);
   try {
     await usageLog.add({
-      model: MODEL,
+      model,
+      depth: input.depth,
       user,
       company: input.company,
       state: input.state || null,
       purpose: input.purpose || 'both',
       status,
       registryCalls: registryCalls || 0,
-      claudeCost: Number(estimateClaudeCost(usage, MODEL).toFixed(4)),
+      claudeCost: Number(estimateClaudeCost(usage, model).toFixed(4)),
       tokens: usage,
       error,
     });

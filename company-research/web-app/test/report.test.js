@@ -49,7 +49,10 @@ test('user message carries inputs, purpose and date; system prompt stays static'
 
 test('cleanInput trims, drops unknown keys and caps length', () => {
   const out = cleanInput({ company: '  Acme  ', evil: 'x', city: '', notes: 'n'.repeat(5000) });
-  assert.deepEqual(Object.keys(out).sort(), ['company', 'notes']);
+  assert.deepEqual(Object.keys(out).sort(), ['company', 'depth', 'notes']);
+  assert.equal(out.depth, 'standard');
+  assert.equal(cleanInput({ company: 'A', depth: 'thorough' }).depth, 'thorough');
+  assert.equal(cleanInput({ company: 'A', depth: 'max' }).depth, 'standard');
   assert.equal(out.company, 'Acme');
   assert.equal(out.notes.length, 1000);
 });

@@ -5,7 +5,12 @@ import { systemPrompt, buildUserMessage } from './prompt.js';
 import { sosSearch, sosConfigured, SEARCH_BY } from './sosfinder.js';
 import { addUsage } from './usage.js';
 
-const MODEL = process.env.CLAUDE_MODEL || 'claude-opus-5-5';
+// Two research depths: "standard" (default, cheapest) and "thorough", chosen per lookup.
+export const MODELS = {
+  standard: process.env.CLAUDE_MODEL || 'claude-haiku-5-5',
+  thorough: process.env.CLAUDE_MODEL_THOROUGH || 'claude-sonnet-5-5',
+};
+export const modelFor = (depth) => MODELS[depth] ?? MODELS.standard;
 const EFFORT = process.env.CLAUDE_EFFORT || 'medium';
 const MAX_SEARCHES = Number(process.env.MAX_WEB_SEARCHES || 12);
 const MAX_FETCHES = Number(process.env.MAX_WEB_FETCHES || 8);
@@ -18,12 +23,12 @@ const REGISTRY_TOOL = 'state_registry_search';
 
 // The newer web tools (dynamic filtering) and server-side refusal fallback are only
 // available on some models; Haiku uses the basic web tools and runs without fallback.
-const DYNAMIC_WEB = /^claude-(opus-(5-5|5|4-8|4-7|4-6)|sonnet-(5-5|5|4-6))$/.test(MODEL);
-const SERVER_FALLBACK = /^claude-(opus-5-5|opus-5|sonnet-5-5|fable-5-1)$/.test(MODEL);
+const dynamicWeb = (model) => /^claude-(opus-(5-5|5|4-8|4-7|4-6)|sonnet-(5-5|5|4-6))$/.test(model);
+const serverFallback = (model) => /^claude-(opus-5-5|opus-5|sonnet-5-5|fable-5-1)$/.test(model);
 
-const WEB_TOOLS = [
-  { type: DYNAMIC_WEB ? 'web_search_20260209' : 'web_search_20250305', name: 'web_search', max_uses: MAX_SEARCHES },
-  { type: DYNAMIC_WEB ? 'web_fetch_20260209' : 'web_fetch_20250910', name: 'web_fetch', max_uses: MAX_FETCHES },
+const webTools = (model) => [
+  { type: dynamicWeb(model) ? 'web_search_20260209' : 'web_search_20250305', name: 'web_search', max_uses: MAX_SEARCHES },
+  { type: dynamicWeb(model) ? 'web_fetch_20260209' : 'web_fetch_20250910', name: 'web_fetch', max_uses: MAX_FETCHES },
 ];
 
 const REGISTRY_TOOL_DEF = {
@@ -62,7 +67,7 @@ const REPORT_TOOL_DEF = {
   eager_input_streaming: true,
 };
 
-const toolsFor = (registry) => [...WEB_TOOLS, ...(registry ? [REGISTRY_TOOL_DEF] : []), REPORT_TOOL_DEF];
+const toolsFor = (model, registry) => [...webTools(model), ...(registry ? [REGISTRY_TOOL_DEF] : []), REPORT_TOOL_DEF];
 
 let client;
 const getClient = () => (client ??= new Anthropic());
@@ -80,9 +85,9 @@ export class ResearchError extends Error {
  * (searches, page fetches, phase changes) for the live progress view.
  */
 export async function researchCompany(input, opts = {}) {
-  if (process.env.MOCK_REPORT_FILE) return mockResearch(opts.onProgress ?? (() => {}));
+  if (process.env.MOCK_REPORT_FILE) return mockResearch(opts.onProgress ?? (() => {}), modelFor(input.depth));
   // Usage and registry credits are tracked even when a lookup fails, so the usage log is complete.
-  const spend = { usage: {}, registryCalls: 0 };
+  const spend = { usage: {}, registryCalls: 0, model: modelFor(input.depth) };
   try {
     return await runResearch(input, opts, spend);
   } catch (err) {
@@ -93,7 +98,8 @@ export async function researchCompany(input, opts = {}) {
 
 async function runResearch(input, { onProgress = () => {}, signal } = {}, spend) {
   const registry = sosConfigured();
-  const tools = toolsFor(registry);
+  const model = modelFor(input.depth);
+  const tools = toolsFor(model, registry);
   const system = systemPrompt({ registry });
   const messages = [{ role: 'user', content: buildUserMessage(input) }];
   let nudged = false;
@@ -102,9 +108,9 @@ async function runResearch(input, { onProgress = () => {}, signal } = {}, spend)
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const stream = getClient().beta.messages.stream(
       {
-        model: MODEL,
+        model,
         max_tokens: 64000,
-        ...(SERVER_FALLBACK ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {}),
+        ...(serverFallback(model) ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {}),
         thinking: { type: 'adaptive' },
         output_config: { effort: EFFORT },
         cache_control: { type: 'ephemeral' },
@@ -179,6 +185,7 @@ async function runResearch(input, { onProgress = () => {}, signal } = {}, spend)
           checked_at: new Date().toISOString(),
           usage: spend.usage,
           registry_calls: spend.registryCalls,
+          depth: input.depth === 'thorough' ? 'thorough' : 'standard',
         },
       };
     }
@@ -238,12 +245,12 @@ export async function runRegistryTool(input, { signal, used }) {
 }
 
 // Local preview without an API key: MOCK_REPORT_FILE=test/fixtures/sample-report.json npm start
-async function mockResearch(onProgress) {
+async function mockResearch(onProgress, model) {
   const steps = ['Checking TX state registry: Acme Example Widgets', 'Registry match: ACME EXAMPLE WIDGETS, LLC (Active)', 'Searching: Acme Example Widgets Austin TX', 'Reading: https://www.example.com', 'Compiling report'];
   for (const message of steps) {
     await new Promise((r) => setTimeout(r, 400));
     onProgress({ type: /^(Checking|Registry)/.test(message) ? 'registry' : message.startsWith('Reading') ? 'fetch' : message.startsWith('Searching') ? 'search' : 'phase', message });
   }
   const report = JSON.parse(await readFile(process.env.MOCK_REPORT_FILE, 'utf8'));
-  return { report, meta: { model: 'mock', checked_at: new Date().toISOString(), usage: {}, registry_calls: 1 } };
+  return { report, meta: { model, checked_at: new Date().toISOString(), usage: {}, registry_calls: 1, depth: model.includes('sonnet') ? 'thorough' : 'standard' } };
 }

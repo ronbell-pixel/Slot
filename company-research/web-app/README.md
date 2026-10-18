@@ -38,8 +38,8 @@ The health check is at `/api/health`, and Railway's settings come from `railway.
 
 1. The browser posts the search form to `POST /api/research`.
 2. The server streams progress back as Server-Sent Events (each search query and page read), so the user sees work happening during the 1–3 minutes a lookup takes.
-3. Claude (`claude-opus-5-5`, adaptive thinking, effort `medium`) first calls `state_registry_search`, which the server answers from SOS Finder (`src/sosfinder.js`). The key never leaves the server, results are trimmed to the fields the report uses, repeat searches are cached for 24 hours, and each report may use at most 3 registry credits. If the registry has no match, is blocked, or SOS Finder isn't configured, Claude falls back to web search and the report says so. Claude then uses web search and web fetch for everything else, and calls a `submit_company_report` tool whose JSON schema is defined in `src/schema.js`. That structured report drives the on-screen view, the PDF and the copy-as-text output. The same structure is what batch CSV and CRM push will use later.
-4. If Claude's safety filter declines a request, server-side fallback (`fallbacks: "default"`) retries it on another model.
+3. Claude (Haiku 5.5 by default, or Sonnet 5.5 when the person picks **Thorough** in the form; adaptive thinking, effort `medium`) first calls `state_registry_search`, which the server answers from SOS Finder (`src/sosfinder.js`). The key never leaves the server, results are trimmed to the fields the report uses, repeat searches are cached for 24 hours, and each report may use at most 3 registry credits. If the registry has no match, is blocked, or SOS Finder isn't configured, Claude falls back to web search and the report says so. Claude then uses web search and web fetch for everything else, and calls a `submit_company_report` tool whose JSON schema is defined in `src/schema.js`. That structured report drives the on-screen view, the PDF and the copy-as-text output. The same structure is what batch CSV and CRM push will use later.
+4. On Sonnet, if Claude's safety filter declines a request, server-side fallback (`fallbacks: "default"`) retries it on another model. Haiku has no server-side fallback.
 5. Recent lookups are saved in the user's browser only (localStorage). The server keeps only a usage log (who, when, company name, result, credits and estimated cost) in `DATA_DIR/usage.jsonl`, not the reports themselves.
 
 ## Access codes and usage tracking
@@ -54,7 +54,7 @@ The health check is at `/api/health`, and Railway's settings come from `railway.
 
 **SOS Finder:** a typical report uses 1–2 registry credits, and cached repeats are free. The free plan (50 lookups/month) covers a pilot. To upgrade, change the plan in the SOS Finder dashboard; nothing changes in the app. If you outgrow 3 calls per report, raise `SOS_MAX_CALLS_PER_LOOKUP`. When the monthly quota runs out, the app automatically falls back to web search and marks the report "State registry not verified".
 
-**Anthropic:** you pay Anthropic per lookup: a search fee (about $10 per 1,000 searches, capped at 12 searches per lookup) plus model tokens. **Expect roughly $0.30–$1.00 per lookup**, depending on how many pages Claude reads. To lower it, set `CLAUDE_EFFORT=low` or reduce `MAX_WEB_FETCHES`. To raise thoroughness, set `CLAUDE_EFFORT=high`. Watch actual spend in the Anthropic Console under Usage.
+**Anthropic:** you pay Anthropic per lookup: a search fee (about $10 per 1,000 searches, capped at 12 searches per lookup) plus model tokens. Expect roughly **$0.05–$0.15 per Standard (Haiku) lookup** and **$0.25–$0.50 per Thorough (Sonnet) lookup**, depending on how many pages Claude reads. The usage page shows each lookup's depth and estimated cost. Watch actual spend in the Anthropic Console under Usage.
 
 ## Files
 

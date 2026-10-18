@@ -53,6 +53,7 @@ function render(data) {
   $('recent').replaceChildren(...data.recent.map((r) => {
     const tr = document.createElement('tr');
     tr.append(cell(when(r.ts)), cell(r.user), cell(r.company), cell(r.state || '—'),
+      cell(r.depth === 'thorough' ? 'Thorough' : r.depth === 'standard' ? 'Standard' : '—'),
       cell(r.status === 'ok' ? 'Report' : r.status, `status-${r.status === 'ok' ? 'ok' : r.status}`),
       cell(r.registryCalls || 0, 'num'), cell(money(r.claudeCost), 'num'));
     return tr;

@@ -5,6 +5,7 @@ import { reportAsText, matchLabel, statusTone, formatDate, registryLabel } from 
 const STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','PR'];
 const HISTORY_KEY = 'nextwin.research.history';
 const CODE_KEY = 'nextwin.research.code';
+const DEPTH_KEY = 'nextwin.research.depth';
 const HISTORY_MAX = 20;
 
 const $ = (id) => document.getElementById(id);
@@ -104,6 +105,16 @@ function showApp() {
 }
 
 // ---------- research ----------
+// Remember each person's preferred research depth in this browser.
+const savedDepth = store.get(DEPTH_KEY);
+if (savedDepth) {
+  const radio = el.form.querySelector(`input[name="depth"][value="${savedDepth === 'thorough' ? 'thorough' : 'standard'}"]`);
+  if (radio) radio.checked = true;
+}
+el.form.addEventListener('change', (e) => {
+  if (e.target.name === 'depth') store.set(DEPTH_KEY, e.target.value);
+});
+
 el.form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const input = Object.fromEntries(new FormData(el.form).entries());
@@ -249,7 +260,7 @@ function showReport(entry) {
       <div class="report-head">
         <div>
           <h2>${esc(name)}</h2>
-          <div class="report-sub">${esc(r.input_summary)} · Checked ${esc(formatDate(meta?.checked_at))}</div>
+          <div class="report-sub">${esc(r.input_summary)} · Checked ${esc(formatDate(meta?.checked_at))}${meta?.depth ? ` · ${meta.depth === 'thorough' ? 'Thorough (Sonnet)' : 'Standard (Haiku)'}` : ''}</div>
         </div>
         <div class="report-actions">
           <button class="btn primary small" data-action="pdf" type="button">Download PDF</button>

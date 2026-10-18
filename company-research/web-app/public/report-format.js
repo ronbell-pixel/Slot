@@ -9,6 +9,15 @@ const MATCH_LABELS = {
 
 export const matchLabel = (status) => MATCH_LABELS[status] || 'Match unclear';
 
+/** Short label for how the state registry was checked, or '' for reports made before this existed. */
+export function registryLabel(check) {
+  if (!check) return '';
+  if (check.outcome === 'match' && check.method === 'registry_api') return 'Verified via state registry';
+  if (check.outcome === 'match' && check.method === 'web_search') return 'State registry checked (web)';
+  if (check.outcome === 'no_match') return 'No state registry match';
+  return 'State registry not verified';
+}
+
 export function statusTone(status = '') {
   const s = status.toLowerCase();
   if (/(dissolv|revok|forfeit|inactive|terminat|withdrawn|cancel|suspend|delinquent)/.test(s)) return 'bad';
@@ -32,7 +41,7 @@ export function reportAsText({ report: r, meta, input }) {
   line(`Checked: ${formatDate(meta?.checked_at)}`);
   line();
   line(`Input provided: ${r.input_summary || input?.company || ''}`);
-  line(`Match: ${matchLabel(r.match_status)} · Source confidence: ${r.confidence}`);
+  line(`Match: ${matchLabel(r.match_status)} · Source confidence: ${r.confidence}${registryLabel(r.registry_check) ? ` · ${registryLabel(r.registry_check)}` : ''}`);
   line();
   line('MOST LIKELY MATCH');
   for (const [key, label] of IDENTIFICATION_FIELDS) {
@@ -61,6 +70,9 @@ export function reportAsText({ report: r, meta, input }) {
   }
   line();
   line(`SECRETARY OF STATE FINDINGS: ${r.registry_findings}`);
+  if (r.registry_check?.entity_id || r.registry_check?.registry_url) {
+    line(`Registry record: ${[r.registry_check.entity_id && `ID ${r.registry_check.entity_id}`, r.registry_check.registry_url].filter(Boolean).join(' — ')}`);
+  }
   if (r.candidates?.length) {
     line();
     line('OTHER POSSIBLE MATCHES');

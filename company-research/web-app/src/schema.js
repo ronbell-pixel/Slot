@@ -34,7 +34,7 @@ export const REPORT_SCHEMA = {
   required: [
     'input_summary', 'match_status', 'candidates', 'identification', 'profile',
     'business_summary', 'people', 'licenses', 'registry_findings', 'risk_flags',
-    'prospecting', 'confidence', 'confidence_rationale', 'notes', 'sources',
+    'prospecting', 'confidence', 'confidence_rationale', 'notes', 'sources', 'registry_check',
   ],
   properties: {
     input_summary: { type: 'string', description: 'One line summarizing the search terms provided.' },
@@ -144,6 +144,18 @@ export const REPORT_SCHEMA = {
     confidence: { type: 'string', enum: ['High', 'Medium', 'Low'] },
     confidence_rationale: { type: 'string' },
     notes: { type: 'array', items: { type: 'string' }, description: 'Missing fields, conflicts, exceptions.' },
+    registry_check: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['method', 'outcome', 'entity_id', 'registry_url'],
+      description: 'How the Secretary of State registry was checked.',
+      properties: {
+        method: { type: 'string', enum: ['registry_api', 'web_search', 'not_checked'] },
+        outcome: { type: 'string', enum: ['match', 'no_match', 'unavailable'] },
+        entity_id: { type: ['string', 'null'], description: 'The registry entity / document / file number.' },
+        registry_url: { type: ['string', 'null'], description: 'Official registry page for the entity.' },
+      },
+    },
     sources: {
       type: 'array',
       items: {

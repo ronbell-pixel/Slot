@@ -7,6 +7,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { researchCompany, ResearchError } from './src/research.js';
 import { cleanInput } from './src/prompt.js';
 import { RateLimiter } from './src/rate-limit.js';
+import { sosConfigured } from './src/sosfinder.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
@@ -37,6 +38,7 @@ app.get('/api/health', async () => ({ ok: true }));
 app.get('/api/config', async () => ({
   accessCodeRequired: Boolean(ACCESS_CODE),
   apiKeyConfigured: Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN),
+  registryConnected: sosConfigured() || Boolean(process.env.MOCK_REPORT_FILE),
 }));
 
 app.post('/api/verify-access', async (req, reply) => {

@@ -2,54 +2,195 @@
   "input_summary": "Acme Example Widgets, Austin, TX (fictional sample data)",
   "match_status": "confident_match",
   "candidates": [
-    { "name": "Acme Example Holdings Inc.", "state": "DE", "status": "Active", "reason": "Parent holding company; not the operating entity named in the request." }
+    {
+      "name": "Acme Example Holdings Inc.",
+      "state": "DE",
+      "status": "Active",
+      "reason": "Parent holding company; not the operating entity named in the request."
+    }
   ],
   "identification": {
-    "legal_name": { "value": "Acme Example Widgets, LLC", "source_ids": [1] },
-    "dba_names": { "value": "Acme Widgets", "source_ids": [1, 2] },
-    "entity_type": { "value": "Domestic Limited Liability Company", "source_ids": [1] },
-    "entity_status": { "value": "Active", "source_ids": [1] },
-    "state_of_formation": { "value": "Texas", "source_ids": [1] },
-    "formation_date": { "value": "2012-03-14", "source_ids": [1] },
-    "years_in_business": { "value": "14 years (from 2012-03-14 formation)", "source_ids": [1] },
-    "registered_agent": { "value": "Sample Registered Agents Inc., 100 Example St, Austin, TX 78701", "source_ids": [1] },
-    "principal_address": { "value": "500 Sample Ave, Suite 200, Austin, TX 78702", "source_ids": [1, 2] },
-    "mailing_address": { "value": null, "source_ids": [] },
-    "phone": { "value": "(512) 555-0100", "source_ids": [2] },
-    "website": { "value": "https://www.example.com", "source_ids": [2] },
-    "ein": { "value": null, "source_ids": [] }
+    "legal_name": {
+      "value": "Acme Example Widgets, LLC",
+      "source_ids": [
+        1
+      ]
+    },
+    "dba_names": {
+      "value": "Acme Widgets",
+      "source_ids": [
+        1,
+        2
+      ]
+    },
+    "entity_type": {
+      "value": "Domestic Limited Liability Company",
+      "source_ids": [
+        1
+      ]
+    },
+    "entity_status": {
+      "value": "Active",
+      "source_ids": [
+        1
+      ]
+    },
+    "state_of_formation": {
+      "value": "Texas",
+      "source_ids": [
+        1
+      ]
+    },
+    "formation_date": {
+      "value": "2012-03-14",
+      "source_ids": [
+        1
+      ]
+    },
+    "years_in_business": {
+      "value": "14 years (from 2012-03-14 formation)",
+      "source_ids": [
+        1
+      ]
+    },
+    "registered_agent": {
+      "value": "Sample Registered Agents Inc., 100 Example St, Austin, TX 78701",
+      "source_ids": [
+        1
+      ]
+    },
+    "principal_address": {
+      "value": "500 Sample Ave, Suite 200, Austin, TX 78702",
+      "source_ids": [
+        1,
+        2
+      ]
+    },
+    "mailing_address": {
+      "value": null,
+      "source_ids": []
+    },
+    "phone": {
+      "value": "(512) 555-0100",
+      "source_ids": [
+        2
+      ]
+    },
+    "website": {
+      "value": "https://www.example.com",
+      "source_ids": [
+        2
+      ]
+    },
+    "ein": {
+      "value": null,
+      "source_ids": []
+    }
   },
   "profile": {
-    "industry": { "value": "Industrial equipment manufacturing", "source_ids": [2] },
-    "naics": { "value": "333999 - All Other Miscellaneous General Purpose Machinery Manufacturing", "source_ids": [3] },
-    "ownership": { "value": "Private", "source_ids": [3] },
-    "employees": { "value": "50-100", "source_ids": [3] },
-    "revenue": { "value": null, "source_ids": [] },
-    "locations": { "value": "2 (Austin, TX; Round Rock, TX)", "source_ids": [2] }
+    "industry": {
+      "value": "Industrial equipment manufacturing",
+      "source_ids": [
+        2
+      ]
+    },
+    "naics": {
+      "value": "333999 - All Other Miscellaneous General Purpose Machinery Manufacturing",
+      "source_ids": [
+        3
+      ]
+    },
+    "ownership": {
+      "value": "Private",
+      "source_ids": [
+        3
+      ]
+    },
+    "employees": {
+      "value": "50-100",
+      "source_ids": [
+        3
+      ]
+    },
+    "revenue": {
+      "value": null,
+      "source_ids": []
+    },
+    "locations": {
+      "value": "2 (Austin, TX; Round Rock, TX)",
+      "source_ids": [
+        2
+      ]
+    }
   },
   "business_summary": "Fictional sample: Acme Example Widgets designs and manufactures custom industrial widgets for regional manufacturers, with in-house fabrication and field service.",
   "people": [
-    { "name": "Jordan Sample", "title": "Managing Member", "business_contact": "info@example.com", "source_ids": [1, 2] },
-    { "name": "Casey Example", "title": "Chief Financial Officer", "business_contact": null, "source_ids": [3] }
+    {
+      "name": "Jordan Sample",
+      "title": "Managing Member",
+      "business_contact": "info@example.com",
+      "source_ids": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "Casey Example",
+      "title": "Chief Financial Officer",
+      "business_contact": null,
+      "source_ids": [
+        3
+      ]
+    }
   ],
   "licenses": [
-    { "type": "Sales and Use Tax Permit", "issuer": "Texas Comptroller", "number": "00000000000", "status": "Active", "expiration": null, "source_ids": [4] }
+    {
+      "type": "Sales and Use Tax Permit",
+      "issuer": "Texas Comptroller",
+      "number": "00000000000",
+      "status": "Active",
+      "expiration": null,
+      "source_ids": [
+        4
+      ]
+    }
   ],
   "registry_findings": "Fictional sample: the Texas Secretary of State record shows an active domestic LLC formed 2012-03-14 with a commercial registered agent.",
   "risk_flags": [
-    { "severity": "info", "flag": "Registered agent address differs from operating address", "detail": "Normal for companies using a commercial agent; confirm the operating address with the applicant.", "source_ids": [1] },
-    { "severity": "caution", "flag": "Revenue not publicly available", "detail": "No public revenue figure was found; request financial statements if needed.", "source_ids": [] }
+    {
+      "severity": "info",
+      "flag": "Registered agent address differs from operating address",
+      "detail": "Normal for companies using a commercial agent; confirm the operating address with the applicant.",
+      "source_ids": [
+        1
+      ]
+    },
+    {
+      "severity": "caution",
+      "flag": "Revenue not publicly available",
+      "detail": "No public revenue figure was found; request financial statements if needed.",
+      "source_ids": []
+    }
   ],
   "prospecting": {
     "recent_news": [
-      { "date": "2026-05-02", "headline": "Acme Example Widgets opens second facility in Round Rock", "source_ids": [5] }
+      {
+        "date": "2026-05-02",
+        "headline": "Acme Example Widgets opens second facility in Round Rock",
+        "source_ids": [
+          5
+        ]
+      }
     ],
     "talking_points": [
       "Recently expanded to a second facility, which may create new equipment and financing needs.",
       "Fourteen years in business with a stable registered agent and active status."
     ],
     "social_profiles": [
-      { "network": "LinkedIn", "url": "https://www.linkedin.com/company/example" }
+      {
+        "network": "LinkedIn",
+        "url": "https://www.linkedin.com/company/example"
+      }
     ]
   },
   "confidence": "High",
@@ -59,10 +200,41 @@
     "This is fictional sample data used to preview the report layout."
   ],
   "sources": [
-    { "id": 1, "title": "Texas Secretary of State business record (sample)", "url": "https://www.example.com/sos", "kind": "official_registry" },
-    { "id": 2, "title": "Company website (sample)", "url": "https://www.example.com", "kind": "company" },
-    { "id": 3, "title": "Business directory listing (sample)", "url": "https://www.example.com/directory", "kind": "third_party" },
-    { "id": 4, "title": "Comptroller taxpayer search (sample)", "url": "https://www.example.com/comptroller", "kind": "government" },
-    { "id": 5, "title": "Local news article (sample)", "url": "https://www.example.com/news", "kind": "third_party" }
-  ]
+    {
+      "id": 1,
+      "title": "Texas Secretary of State business record (sample)",
+      "url": "https://www.example.com/sos",
+      "kind": "official_registry"
+    },
+    {
+      "id": 2,
+      "title": "Company website (sample)",
+      "url": "https://www.example.com",
+      "kind": "company"
+    },
+    {
+      "id": 3,
+      "title": "Business directory listing (sample)",
+      "url": "https://www.example.com/directory",
+      "kind": "third_party"
+    },
+    {
+      "id": 4,
+      "title": "Comptroller taxpayer search (sample)",
+      "url": "https://www.example.com/comptroller",
+      "kind": "government"
+    },
+    {
+      "id": 5,
+      "title": "Local news article (sample)",
+      "url": "https://www.example.com/news",
+      "kind": "third_party"
+    }
+  ],
+  "registry_check": {
+    "method": "registry_api",
+    "outcome": "match",
+    "entity_id": "0801234567",
+    "registry_url": "https://www.example.com/sos"
+  }
 }

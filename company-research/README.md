@@ -31,7 +31,7 @@ Recreated as vector files from the NextWin AI logo:
 
 Colors: ink `#0B0F14` · teal `#12876F` · amber `#DB8B1E` · slate `#667085`. Fonts: Inter (wordmark and UI), JetBrains Mono (tagline).
 
-## Data sources (all free)
-Secretary of State and state business registries · company websites · SEC EDGAR · IRS Tax Exempt Organization Search and Form 990 · state licensing boards · NPPES NPI Registry · BBB, directories and news as secondary sources.
+## Data sources
+**SOS Finder** (official Secretary of State records for all 50 states and DC; free plan of 50 lookups/month to start) · company websites · SEC EDGAR · IRS Tax Exempt Organization Search and Form 990 · state licensing boards · NPPES NPI Registry · BBB, directories and news as secondary sources.
 
-Paid APIs such as OpenCorporates are left out for now. The report structure has a place for registry data, so an API can be added later without changing the report.
+Without an SOS Finder key, the registry step falls back to web search. API keys go in sealed Railway variables and nowhere else; see [`API-KEYS.md`](API-KEYS.md).

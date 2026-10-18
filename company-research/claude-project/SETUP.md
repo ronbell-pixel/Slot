@@ -15,7 +15,8 @@ A shared Claude artifact page can ask Claude questions, but in that mode Claude 
    - **Web search**: required
    - **Code execution and file creation**: for PDF downloads
    - **Artifacts**: optional, for print-ready reports
-5. **Share:** use the project's **Share** button and add teammates or your whole organization. Give **Can use** to people running lookups and **Can edit** to anyone maintaining the instructions.
+5. **Optional: connect SOS Finder** (state registry data). An organization Owner adds it once under **Settings → Connectors → Add custom connector**, with the URL `https://api.sosfinder.com/mcp`. Claude.ai custom connectors normally sign in with OAuth, and SOS Finder uses an API key instead, so this may not connect from claude.ai. If it doesn't, the project still works with web search, and the web app (Option E) has SOS Finder built in. In **Claude Code** or **Claude Desktop** it works today; see `../API-KEYS.md`.
+6. **Share:** use the project's **Share** button and add teammates or your whole organization. Give **Can use** to people running lookups and **Can edit** to anyone maintaining the instructions.
 
 ## How people use it
 Open the project, start a chat, and type for example `Research Acme Widgets LLC, Austin TX — credit application`. Claude searches the Secretary of State registry and other sources, returns the cited report, and offers a PDF.

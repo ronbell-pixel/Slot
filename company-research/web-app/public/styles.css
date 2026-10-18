@@ -116,6 +116,9 @@ input:focus, select:focus, textarea:focus, button:focus-visible, summary:focus-v
 .btn.block { width: 100%; padding: 12px; }
 .btn.small { padding: 6px 10px; font-size: 13px; }
 .btn:disabled { opacity: .55; cursor: not-allowed; }
+.registry-status { margin: 10px 0 0; color: var(--teal); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.registry-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--teal); }
+.progress-log li.registry::before { background: var(--ink); box-shadow: 0 0 0 2px var(--teal); }
 .soon { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .link-btn { background: none; border: 0; color: var(--teal); font: inherit; font-size: 13px; cursor: pointer; padding: 0; }
 
@@ -192,6 +195,7 @@ input:focus, select:focus, textarea:focus, button:focus-visible, summary:focus-v
 .section { margin-top: 16px; }
 .section h3 { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
 .summary-text { margin: 0; font-size: 15px; }
+.registry-link { margin: 8px 0 0; font-size: 14px; font-weight: 600; }
 
 .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; margin: 0; }
 @media (max-width: 640px) { .facts { grid-template-columns: 1fr; } }

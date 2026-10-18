@@ -1,0 +1,94 @@
+openapi: 3.1.0
+info:
+  title: SOS Finder state business registry search
+  description: Official Secretary of State business entity records for all 50 U.S. states and DC, normalized into one schema.
+  version: 1.0.0
+servers:
+  - url: https://api.sosfinder.com
+paths:
+  /search:
+    get:
+      operationId: searchStateRegistry
+      summary: Search a state's Secretary of State business registry
+      description: >
+        Returns the best-matching registered entity plus similar filings: status/standing, entity type,
+        formation date, registered agent, addresses, officers (where the state publishes them), filings,
+        documents and the official registry URL (sosUrl). Each call uses one paid lookup credit, so search
+        the most likely state first and avoid repeating the same search.
+      parameters:
+        - name: state
+          in: query
+          required: true
+          description: Two-letter state code, e.g. TX.
+          schema:
+            type: string
+        - name: business_name
+          in: query
+          required: true
+          description: Business name to search, or the registry ID when `by` is set.
+          schema:
+            type: string
+        - name: by
+          in: query
+          required: false
+          description: Omit for a name search. Use a registry ID field for an exact lookup.
+          schema:
+            type: string
+            enum: [name, entityId, documentNumber, fileNumber, filingNumber, controlNumber]
+      responses:
+        "200":
+          description: Search result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state: { type: string }
+                  stateName: { type: string }
+                  success: { type: boolean, description: false when there are no matches }
+                  count: { type: integer }
+                  blocked: { type: boolean, description: true if the state registry blocked every retry; fall back to web search }
+                  error: { type: [string, object, "null"] }
+                  bestMatch:
+                    type: [object, "null"]
+                    properties:
+                      name: { type: string }
+                      entityId: { type: string }
+                      status: { type: [string, "null"] }
+                      standing: { type: [string, "null"] }
+                      entityType: { type: [string, "null"] }
+                      formationDate: { type: [string, "null"] }
+                      dissolutionDate: { type: [string, "null"] }
+                      jurisdiction: { type: [string, "null"] }
+                      feiEin: { type: [string, "null"] }
+                      registeredAgentName: { type: [string, "null"] }
+                      registeredAgentAddress: { type: [string, "null"] }
+                      principalOfficeAddress: { type: [string, "null"] }
+                      mailingAddress: { type: [string, "null"] }
+                      sosUrl: { type: [string, "null"] }
+                      officers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name: { type: string }
+                            title: { type: [string, "null"] }
+                  results:
+                    type: array
+                    description: Best match first, then similar filings.
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string }
+                        entityId: { type: string }
+                        status: { type: [string, "null"] }
+                        entityType: { type: [string, "null"] }
+                        formationDate: { type: [string, "null"] }
+      security:
+        - apiKey: []
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: x-api-key

@@ -7,7 +7,7 @@ Show this disclaimer once, before the first report:
 If the user hasn't given a company name, ask for it plus the state (and city if known). Ask whether the lookup is for a credit application, sales prospecting, or both; default to both.
 
 ## How to research (always use web search and web fetch; never answer from memory)
-1. **Secretary of State / state business registry first.** Find the state's official business entity search and capture: legal name, entity type, status, formation/registration date, state of formation, registered agent, principal and mailing addresses.
+1. **Secretary of State / state business registry first.** If the SOS Finder tool (`search_business_entity`) is available, call it first with the state and business name. Treat its record as authoritative for legal name, entity type, status/standing, formation date, state of formation, registered agent, addresses and officers, and cite its `sosUrl`. Each call costs a paid credit: search the most likely state first and make no more than 3 calls per company. If the tool isn't available, finds no match or is blocked, find the state's official business entity search on the web and capture the same fields, noting which method you used.
 2. **Multiple matches:** list the top candidates in a short table and say which is most likely and why. If the identity is genuinely unclear, ask one clarifying question (city, address, owner name) instead of guessing.
 3. **Profile sources, in order of preference:** official company website; SEC EDGAR filings (if public or an SEC filer); IRS Tax Exempt Organization Search / Form 990 (nonprofits); state licensing boards and the NPPES NPI Registry (medical, legal, real estate, contractor, insurance, financial and other professional licenses). Use BBB, industry directories, LinkedIn or business databases only as secondary support.
 4. **Prospecting:** recent news (last 24 months), growth signals, and 2–4 specific, factual talking points.
@@ -66,7 +66,7 @@ License type — Issuer — Number — Status — Expiration [source], or "None 
 Industry / NAICS · Size (employees, revenue if public) · Recent news · Talking points
 *(Shorten this section when the purpose is credit only.)*
 
-### Source Confidence: High / Medium / Low
+### Source Confidence: High / Medium / Low (+ "Verified via state registry" when the registry record came from SOS Finder)
 High = official registry record matches the inputs; Medium = relies on secondary sources or has small inconsistencies; Low = identity uncertain. One sentence explaining why.
 
 ### Notes / Exceptions

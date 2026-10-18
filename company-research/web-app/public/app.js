@@ -1,6 +1,6 @@
 import { IDENTIFICATION_FIELDS, PROFILE_FIELDS } from './report-fields.js';
 import { downloadPdf } from './pdf.js';
-import { reportAsText, matchLabel, statusTone, formatDate } from './report-format.js';
+import { reportAsText, matchLabel, statusTone, formatDate, registryLabel } from './report-format.js';
 
 const STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','PR'];
 const HISTORY_KEY = 'nextwin.research.history';
@@ -13,7 +13,7 @@ const el = {
   app: $('app'), form: $('search-form'), submit: $('submit-btn'), state: $('state-select'),
   empty: $('empty'), progress: $('progress'), progressTitle: $('progress-title'), log: $('progress-log'),
   cancel: $('cancel-btn'), error: $('error'), errorText: $('error-text'), report: $('report'),
-  history: $('history'), clearHistory: $('clear-history'),
+  history: $('history'), clearHistory: $('clear-history'), registryStatus: $('registry-status'),
 };
 
 // ---------- storage (per-browser convenience only) ----------
@@ -48,6 +48,10 @@ async function init() {
     return;
   }
   showApp();
+  if (config.registryConnected) {
+    el.registryStatus.textContent = 'State registry data connected (SOS Finder)';
+    el.registryStatus.hidden = false;
+  }
 }
 
 async function verify(code) {
@@ -190,6 +194,20 @@ function table(headers, rows) {
     rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 
+function registryBadge(check) {
+  const label = registryLabel(check);
+  if (!label) return '';
+  const tone = check.outcome === 'match' && check.method !== 'not_checked' ? 'good' : 'warn';
+  return `<span class="badge ${tone}">${esc(label)}</span>`;
+}
+
+function registryLink(check) {
+  const url = safeUrl(check?.registry_url);
+  if (!url && !check?.entity_id) return '';
+  const id = check.entity_id ? `Registry ID ${esc(check.entity_id)}` : 'Registry record';
+  return `<p class="registry-link">${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${id} — view official record</a>` : id}</p>`;
+}
+
 function showReport(entry) {
   const { report: r, meta, input } = entry;
   const id = r.identification || {};
@@ -213,6 +231,7 @@ function showReport(entry) {
       <div class="badges">
         <span class="badge ${confTone}">Confidence: ${esc(r.confidence)}</span>
         <span class="badge">${esc(matchLabel(r.match_status))}</span>
+        ${registryBadge(r.registry_check)}
         ${status ? `<span class="badge ${statusTone(status)}">Status: ${esc(status)}</span>` : ''}
         ${r.risk_flags?.length ? `<span class="badge warn">${r.risk_flags.length} flag${r.risk_flags.length > 1 ? 's' : ''}</span>` : ''}
       </div>
@@ -226,7 +245,7 @@ function showReport(entry) {
       r.risk_flags.map((f) => `<li class="flag ${esc(f.severity)}"><b>${esc(f.flag)}${cites(f.source_ids)}</b><span>${esc(f.detail)}</span></li>`).join('')}</ul></div></div>`);
   }
 
-  sections.push(`<div class="card"><div class="section" style="margin-top:0"><h3>Secretary of State findings</h3><p class="summary-text">${esc(r.registry_findings)}</p></div>
+  sections.push(`<div class="card"><div class="section" style="margin-top:0"><h3>Secretary of State findings</h3><p class="summary-text">${esc(r.registry_findings)}</p>${registryLink(r.registry_check)}</div>
     ${r.candidates?.length ? `<div class="section"><h3>Other possible matches</h3>${table(['Name', 'State', 'Status', 'Why'],
       r.candidates.map((c) => [esc(c.name), esc(c.state || '—'), esc(c.status || '—'), esc(c.reason)]))}</div>` : ''}</div>`);
 

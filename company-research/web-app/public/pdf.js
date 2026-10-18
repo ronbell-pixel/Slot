@@ -1,6 +1,6 @@
 // Builds a branded, text-based (searchable) PDF of a report with pdfmake, loaded from /vendor/pdfmake.
 import { IDENTIFICATION_FIELDS, PROFILE_FIELDS } from './report-fields.js';
-import { matchLabel, formatDate } from './report-format.js';
+import { matchLabel, formatDate, registryLabel } from './report-format.js';
 
 const INK = '#0B0F14';
 const TEAL = '#12876F';
@@ -72,8 +72,17 @@ export function buildDocDefinition({ report: r, meta, input }) {
         { text: [{ text: 'Status: ', color: SLATE }, { text: dash(id.entity_status?.value), bold: true }] },
       ],
       fontSize: 9.5,
-      margin: [0, 0, 0, 10],
+      margin: [0, 0, 0, registryLabel(r.registry_check) ? 4 : 10],
     },
+    registryLabel(r.registry_check)
+      ? {
+        text: registryLabel(r.registry_check),
+        bold: true,
+        fontSize: 9.5,
+        color: r.registry_check.outcome === 'match' && r.registry_check.method !== 'not_checked' ? TEAL : AMBER,
+        margin: [0, 0, 0, 10],
+      }
+      : '',
     {
       table: { widths: ['*'], body: [[{ text: [{ text: 'AI-generated research. ', bold: true }, 'Provided for research assistance only; not a consumer report. Verify all information using the cited sources before relying on it for business, legal, compliance, or credit purposes.'], fontSize: 8, fillColor: '#FCF1E1', margin: [6, 5, 6, 5] }]] },
       layout: { hLineWidth: () => 0, vLineWidth: (i) => (i === 0 ? 3 : 0), vLineColor: () => AMBER },
@@ -95,6 +104,16 @@ export function buildDocDefinition({ report: r, meta, input }) {
   }
 
   content.push(heading('Secretary of State findings'), { text: r.registry_findings || '' });
+  const rc = r.registry_check;
+  if (rc?.entity_id || rc?.registry_url) {
+    content.push({
+      text: [
+        { text: rc.entity_id ? `Registry ID ${rc.entity_id}` : 'Registry record', bold: true },
+        rc.registry_url ? { text: `  ${rc.registry_url}`, color: TEAL, link: rc.registry_url, fontSize: 8 } : '',
+      ],
+      margin: [0, 4, 0, 0],
+    });
+  }
   if (r.candidates?.length) {
     content.push(heading('Other possible matches'), dataTable(['Name', 'State', 'Status', 'Why'],
       r.candidates.map((c) => [c.name, dash(c.state), dash(c.status), c.reason]), ['*', 40, 60, '*']));

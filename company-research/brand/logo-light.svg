@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="80 120 1240 880" role="img" aria-label="NextWin AI — Work flows. Business grows.">
+  <polyline points="558,432 657,243 723,326 833,178" fill="none" stroke="#F3F5F7" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="558" cy="432" r="31" fill="#F3F5F7"/>
+  <circle cx="723" cy="326" r="26" fill="#2BB394"/>
+  <circle cx="833" cy="178" r="23" fill="#F3F5F7" stroke="#DB8B1E" stroke-width="13"/>
+  <text x="696" y="795" text-anchor="middle" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="215" letter-spacing="-6" textLength="1150" lengthAdjust="spacingAndGlyphs"><tspan fill="#F3F5F7">NextWin</tspan><tspan fill="#98A2B3" font-weight="500"> AI</tspan></text>
+  <text x="696" y="965" text-anchor="middle" font-family="'JetBrains Mono', 'IBM Plex Mono', Menlo, monospace" font-size="60" textLength="1180" lengthAdjust="spacing" fill="#2BB394">WORK FLOWS. BUSINESS GROWS.</text>
+</svg>

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NextWin Company Research</title>
+  <meta name="description" content="Source-grounded company profiles for credit applications and sales prospecting.">
+  <link rel="icon" type="image/svg+xml" href="/brand/icon.svg">
+  <link rel="apple-touch-icon" href="/brand/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="/" aria-label="NextWin AI Company Research home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text"><b>NextWin</b> <span class="brand-ai">AI</span></span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-product">Company Research</span>
+      </a>
+      <span class="tagline">Work flows. Business grows.</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="gate" class="card gate" hidden>
+      <h1>Enter access code</h1>
+      <p class="muted">Ask your NextWin administrator for the team access code.</p>
+      <form id="gate-form" class="gate-form">
+        <input id="gate-code" type="password" autocomplete="current-password" placeholder="Access code" required>
+        <button class="btn primary" type="submit">Continue</button>
+      </form>
+      <p id="gate-error" class="error-text" hidden></p>
+    </section>
+
+    <div id="app" class="layout" hidden>
+      <aside class="sidebar">
+        <form id="search-form" class="card search-card">
+          <h1 class="card-title">New lookup</h1>
+          <label class="field">
+            <span>Company name <em>*</em></span>
+            <input name="company" required maxlength="200" placeholder="Full or partial name" autocomplete="organization">
+          </label>
+          <div class="row">
+            <label class="field">
+              <span>State</span>
+              <select name="state" id="state-select"><option value="">Any</option></select>
+            </label>
+            <label class="field">
+              <span>City</span>
+              <input name="city" maxlength="200" autocomplete="address-level2">
+            </label>
+          </div>
+          <details class="more">
+            <summary>More identifying details</summary>
+            <label class="field"><span>Street address</span><input name="address" maxlength="200" autocomplete="street-address"></label>
+            <label class="field"><span>Phone</span><input name="phone" maxlength="200" autocomplete="tel"></label>
+            <label class="field"><span>Website</span><input name="website" maxlength="200" placeholder="example.com"></label>
+            <label class="field"><span>Other details</span><textarea name="notes" rows="3" maxlength="1000" placeholder="Owner name, industry, EIN to verify…"></textarea></label>
+          </details>
+          <fieldset class="purpose">
+            <legend>Purpose</legend>
+            <label><input type="radio" name="purpose" value="credit"> Credit application</label>
+            <label><input type="radio" name="purpose" value="prospecting"> Sales prospecting</label>
+            <label><input type="radio" name="purpose" value="both" checked> Both</label>
+          </fieldset>
+          <button id="submit-btn" class="btn primary block" type="submit">Research company</button>
+          <div class="soon">
+            <button class="btn ghost small" type="button" disabled title="Coming soon">Batch upload (CSV)</button>
+            <button class="btn ghost small" type="button" disabled title="Coming soon">Send to CRM</button>
+          </div>
+        </form>
+
+        <section class="card history-card">
+          <div class="history-head">
+            <h2 class="card-title">Recent lookups</h2>
+            <button id="clear-history" class="link-btn" type="button" hidden>Clear</button>
+          </div>
+          <p class="muted small">Saved in this browser only.</p>
+          <ul id="history" class="history"></ul>
+        </section>
+      </aside>
+
+      <section class="content">
+        <div class="disclaimer" role="note">
+          <strong>AI-generated research.</strong> This report is provided for research assistance only and is not a consumer report. Verify all information using the cited sources before relying on it for business, legal, compliance, or credit purposes.
+        </div>
+
+        <div id="empty" class="card empty">
+          <img src="/brand/mark.svg" alt="" class="empty-mark light-only">
+          <img src="/brand/mark-light.svg" alt="" class="empty-mark dark-only">
+          <h2>Research any U.S. business</h2>
+          <p class="muted">Enter a company name and state. NextWin checks the Secretary of State registry first, then the company website, SEC, IRS and licensing sources, and returns a cited profile you can export to PDF.</p>
+        </div>
+
+        <div id="progress" class="card progress" hidden>
+          <div class="progress-head">
+            <span class="spinner" aria-hidden="true"></span>
+            <div>
+              <h2 id="progress-title">Researching…</h2>
+              <p class="muted small">Usually takes 1–3 minutes.</p>
+            </div>
+            <button id="cancel-btn" class="btn ghost small" type="button">Cancel</button>
+          </div>
+          <ol id="progress-log" class="progress-log" aria-live="polite"></ol>
+        </div>
+
+        <div id="error" class="card error-card" hidden>
+          <h2>Couldn't finish this lookup</h2>
+          <p id="error-text"></p>
+        </div>
+
+        <article id="report" hidden></article>
+      </section>
+    </div>
+  </main>
+
+  <footer class="wrap footer">
+    <span>© NextWin AI · <a href="https://nextwin-os.com" target="_blank" rel="noopener">nextwin-os.com</a></span>
+  </footer>
+
+  <script src="/vendor/pdfmake/pdfmake.min.js" defer></script>
+  <script src="/vendor/pdfmake/vfs_fonts.js" defer></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

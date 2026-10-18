@@ -4,18 +4,30 @@ import path from 'node:path';
 // Usage log: one JSON line per lookup in DATA_DIR/usage.jsonl. On Railway,
 // DATA_DIR points at a mounted volume so the log survives redeploys.
 
-// Claude Opus 5.5 list prices (USD per million tokens) and the web search fee.
-// Estimates only; the Anthropic Console has the authoritative bill.
-const PRICES = { input: 4, output: 20, cacheWrite: 5, cacheRead: 0.2, perSearch: 0.01 };
+// List prices in USD per million tokens, plus the web search fee. Estimates only;
+// the Anthropic Console has the authoritative bill.
+const MODEL_PRICES = {
+  opus: { input: 4, output: 20, cacheRead: 0.2 },
+  sonnet: { input: 2, output: 10, cacheRead: 0.2 },
+  haiku: { input: 0.1, output: 0.5, cacheRead: 0.01 },
+};
+const PER_SEARCH = 0.01;
 
-export function estimateClaudeCost(u = {}) {
+export function priceFor(model = process.env.CLAUDE_MODEL || 'claude-opus-5-5') {
+  const family = Object.keys(MODEL_PRICES).find((f) => model.includes(f)) ?? 'opus';
+  const p = MODEL_PRICES[family];
+  return { ...p, cacheWrite: p.input * 1.25 };
+}
+
+export function estimateClaudeCost(u = {}, model) {
+  const p = priceFor(model);
   const m = 1e6;
   return (
-    ((u.input_tokens || 0) * PRICES.input) / m +
-    ((u.output_tokens || 0) * PRICES.output) / m +
-    ((u.cache_creation_input_tokens || 0) * PRICES.cacheWrite) / m +
-    ((u.cache_read_input_tokens || 0) * PRICES.cacheRead) / m +
-    (u.web_search_requests || 0) * PRICES.perSearch
+    ((u.input_tokens || 0) * p.input) / m +
+    ((u.output_tokens || 0) * p.output) / m +
+    ((u.cache_creation_input_tokens || 0) * p.cacheWrite) / m +
+    ((u.cache_read_input_tokens || 0) * p.cacheRead) / m +
+    (u.web_search_requests || 0) * PER_SEARCH
   );
 }
 

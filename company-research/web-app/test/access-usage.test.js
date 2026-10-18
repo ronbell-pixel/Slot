@@ -49,3 +49,11 @@ test('usage log persists, counts per month and summarizes per person', async () 
   assert.equal(s.totals.claudeCost.toFixed(1), '1.3');
   assert.equal(s.recent[0].company, 'C');
 });
+
+test('cost estimate follows the configured model', async () => {
+  const { estimateClaudeCost } = await import('../src/usage.js');
+  const u = { input_tokens: 1_000_000, output_tokens: 100_000 };
+  assert.equal(estimateClaudeCost(u, 'claude-opus-5-5').toFixed(2), '6.00');
+  assert.equal(estimateClaudeCost(u, 'claude-sonnet-5-5').toFixed(2), '3.00');
+  assert.equal(estimateClaudeCost(u, 'claude-haiku-5-5').toFixed(2), '0.15');
+});

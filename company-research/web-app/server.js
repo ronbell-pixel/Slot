@@ -132,16 +132,19 @@ app.post('/api/research', async (req, reply) => {
   }
 });
 
+const MODEL = process.env.CLAUDE_MODEL || 'claude-opus-5-5';
+
 async function logUsage(user, input, status, usage = {}, registryCalls = 0, error = null) {
   try {
     await usageLog.add({
+      model: MODEL,
       user,
       company: input.company,
       state: input.state || null,
       purpose: input.purpose || 'both',
       status,
       registryCalls: registryCalls || 0,
-      claudeCost: Number(estimateClaudeCost(usage).toFixed(4)),
+      claudeCost: Number(estimateClaudeCost(usage, MODEL).toFixed(4)),
       tokens: usage,
       error,
     });

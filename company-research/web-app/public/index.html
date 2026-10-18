@@ -25,6 +25,31 @@
     </div>
   </header>
 
+  <section class="hero" id="hero">
+    <div class="hero-bg" aria-hidden="true">
+      <span class="orb orb-teal"></span><span class="orb orb-amber"></span><span class="orb orb-violet"></span>
+      <svg class="hero-chart" viewBox="0 0 1200 320" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="hl" x1="0" x2="1"><stop offset="0" stop-color="#2BB394"/><stop offset="1" stop-color="#F0A63A"/></linearGradient>
+        </defs>
+        <polyline points="0,260 180,210 330,240 520,120 650,170 820,80 1000,110 1200,20" fill="none" stroke="url(#hl)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="520" cy="120" r="9" fill="#2BB394"/><circle cx="820" cy="80" r="9" fill="#2BB394"/>
+        <circle cx="1200" cy="20" r="12" fill="none" stroke="#F0A63A" stroke-width="5"/>
+      </svg>
+    </div>
+    <div class="wrap hero-inner">
+      <p class="hero-eyebrow">NextWin AI · Company Research</p>
+      <h1 class="hero-title">Know any business<br><span class="hero-grad">in minutes, not hours.</span></h1>
+      <p class="hero-sub">Official Secretary of State records, the company's own website, SEC, IRS and licensing sources, combined into one cited report you can trust and export to PDF.</p>
+      <ul class="hero-chips">
+        <li><span class="chip-dot teal"></span>State registry verified</li>
+        <li><span class="chip-dot amber"></span>Every fact cited</li>
+        <li><span class="chip-dot violet"></span>Credit &amp; prospecting ready</li>
+        <li><span class="chip-dot sky"></span>Branded PDF export</li>
+      </ul>
+    </div>
+  </section>
+
   <main class="wrap">
     <section id="gate" class="card gate" hidden>
       <h1>Enter access code</h1>
@@ -95,10 +120,12 @@
         </div>
 
         <div id="empty" class="card empty">
-          <img src="/brand/mark.svg" alt="" class="empty-mark light-only">
-          <img src="/brand/mark-light.svg" alt="" class="empty-mark dark-only">
-          <h2>Research any U.S. business</h2>
-          <p class="muted">Enter a company name and state. NextWin checks the Secretary of State registry first, then the company website, SEC, IRS and licensing sources, and returns a cited profile you can export to PDF.</p>
+          <h2>How it works</h2>
+          <ol class="steps">
+            <li><span class="step-num">1</span><div><b>Enter a company</b><p class="muted">Name and state, plus any details you have: city, address, website.</p></div></li>
+            <li><span class="step-num">2</span><div><b>NextWin researches it</b><p class="muted">Registry first, then the company site, SEC, IRS, licensing boards and news. Watch every step live.</p></div></li>
+            <li><span class="step-num">3</span><div><b>Get a cited report</b><p class="muted">Legal identity, status, people, licenses, flags and talking points, ready to download as a PDF.</p></div></li>
+          </ol>
         </div>
 
         <div id="progress" class="card progress" hidden>

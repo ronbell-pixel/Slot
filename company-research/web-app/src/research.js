@@ -16,9 +16,14 @@ const MAX_ROUNDS = 10;
 const REPORT_TOOL = 'submit_company_report';
 const REGISTRY_TOOL = 'state_registry_search';
 
+// The newer web tools (dynamic filtering) and server-side refusal fallback are only
+// available on some models; Haiku uses the basic web tools and runs without fallback.
+const DYNAMIC_WEB = /^claude-(opus-(5-5|5|4-8|4-7|4-6)|sonnet-(5-5|5|4-6))$/.test(MODEL);
+const SERVER_FALLBACK = /^claude-(opus-5-5|opus-5|sonnet-5-5|fable-5-1)$/.test(MODEL);
+
 const WEB_TOOLS = [
-  { type: 'web_search_20260209', name: 'web_search', max_uses: MAX_SEARCHES },
-  { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: MAX_FETCHES },
+  { type: DYNAMIC_WEB ? 'web_search_20260209' : 'web_search_20250305', name: 'web_search', max_uses: MAX_SEARCHES },
+  { type: DYNAMIC_WEB ? 'web_fetch_20260209' : 'web_fetch_20250910', name: 'web_fetch', max_uses: MAX_FETCHES },
 ];
 
 const REGISTRY_TOOL_DEF = {
@@ -96,8 +101,7 @@ async function runResearch(input, { onProgress = () => {}, signal } = {}, spend)
       {
         model: MODEL,
         max_tokens: 64000,
-        betas: ['server-side-fallback-2026-07-01'],
-        fallbacks: 'default',
+        ...(SERVER_FALLBACK ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {}),
         thinking: { type: 'adaptive' },
         output_config: { effort: EFFORT },
         cache_control: { type: 'ephemeral' },

@@ -186,6 +186,7 @@ function addLog({ type, message }) {
 
 function showOnly(name) {
   for (const key of ['empty', 'progress', 'error', 'report']) el[key].hidden = key !== name;
+  document.body.classList.toggle('has-results', name !== 'empty');
 }
 
 function showError(message) {

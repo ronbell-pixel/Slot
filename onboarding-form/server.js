@@ -10,7 +10,7 @@ const PUBLIC = path.join(ROOT, 'public');
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
 const PORT = Number(process.env.PORT) || 3000;
 const { RESEND_API_KEY, NOTIFY_EMAIL, ADMIN_CODE } = process.env;
-const FROM_EMAIL = process.env.FROM_EMAIL || 'NextWin Onboarding <onboarding@resend.dev>';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'NextWin AI Onboarding <onboarding@resend.dev>';
 const MAX_BODY = 200_000;
 const MAX_FIELD = 5_000;
 
@@ -50,15 +50,17 @@ function renderHtml(answers, meta) {
   const sections = SECTIONS.map(s => {
     const rows = s.fields.filter(f => answers[f.id]).map(f => {
       const v = Array.isArray(answers[f.id]) ? answers[f.id].join(', ') : answers[f.id];
-      return `<tr><td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;color:#6B7280;width:38%;vertical-align:top;font-size:13px">${esc(f.label)}</td>`
-        + `<td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;color:#111827;font-size:14px;white-space:pre-wrap">${esc(v)}</td></tr>`;
+      return `<tr><td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;color:#646B7A;width:38%;vertical-align:top;font-size:13px">${esc(f.label)}</td>`
+        + `<td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;color:#0A1017;font-size:14px;white-space:pre-wrap">${esc(v)}</td></tr>`;
     }).join('');
-    return rows ? `<h2 style="font:600 15px system-ui,sans-serif;color:#4F46E5;margin:28px 0 8px;border-bottom:2px solid #4F46E5;padding-bottom:6px">${esc(s.title)}</h2>`
+    return rows ? `<h2 style="font:600 15px system-ui,sans-serif;color:#028071;margin:28px 0 8px;border-bottom:2px solid #0A1017;padding-bottom:6px">${esc(s.title)}</h2>`
       + `<table style="width:100%;border-collapse:collapse;font-family:system-ui,sans-serif">${rows}</table>` : '';
   }).join('');
   return `<div style="max-width:720px;margin:auto;font-family:system-ui,sans-serif">`
-    + `<h1 style="font-size:22px;color:#111827;margin:0 0 4px">New client questionnaire: ${esc(answers.business_name || 'Unnamed')}</h1>`
-    + `<p style="color:#6B7280;margin:0">Submitted ${esc(meta.at)} · ID ${esc(meta.id)}</p>${sections}</div>`;
+    + `<p style="margin:0 0 18px;font:800 18px system-ui,sans-serif;color:#0A1017;letter-spacing:-.02em">NextWin <span style="color:#646B7A">AI</span>`
+    + `<span style="display:block;font:500 10px ui-monospace,monospace;letter-spacing:.2em;color:#028071;margin-top:3px">WORK FLOWS. BUSINESS GROWS.</span></p>`
+    + `<h1 style="font-size:22px;color:#0A1017;margin:0 0 4px">New client questionnaire: ${esc(answers.business_name || 'Unnamed')}</h1>`
+    + `<p style="color:#646B7A;margin:0">Submitted ${esc(meta.at)} · ID ${esc(meta.id)}</p>${sections}</div>`;
 }
 
 function renderText(answers) {

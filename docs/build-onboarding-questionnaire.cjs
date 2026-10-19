@@ -2,10 +2,14 @@ const fs = require('fs');
 const {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType,
   AlignmentType, BorderStyle, Header, Footer, PageNumber, HeadingLevel, PageBreak, TabStopType,
-  VerticalAlign, HeightRule,
+  VerticalAlign, HeightRule, ImageRun,
 } = require('docx');
+const path = require('path');
+const BRAND = path.join(__dirname, 'brand');
+const img = (f, w, h) => new ImageRun({ type: 'png', data: fs.readFileSync(path.join(BRAND, f)), transformation: { width: w, height: h } });
 
-const ACCENT = '4F46E5', DARK = '111827', MUTED = '6B7280', SOFT = 'EEF2FF', LINE = 'E5E7EB', FONT = 'Calibri';
+// NextWin AI brand: ink, teal, orange spark, slate
+const ACCENT = '028071', DARK = '0A1017', MUTED = '646B7A', SOFT = 'E6F2F0', SPARK = 'E28820', LINE = 'E3E6EA', FONT = 'Arial';
 const W = 9360;
 const none = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
 const hair = { style: BorderStyle.SINGLE, size: 4, color: LINE };
@@ -15,9 +19,9 @@ const p = (runs, o = {}) => new Paragraph({ children: Array.isArray(runs) ? runs
 
 function sectionHead(num, title, intro) {
   return [
-    p([t(num, { color: ACCENT, bold: true, size: 22 }), t('   ' + title.toUpperCase(), { color: DARK, bold: true, size: 22, characterSpacing: 40 })], {
+    p([t(num, { color: SPARK, bold: true, size: 22 }), t('   ' + title.toUpperCase(), { color: DARK, bold: true, size: 22, characterSpacing: 40 })], {
       heading: HeadingLevel.HEADING_1, keepNext: true, spacing: { before: 360, after: 80 },
-      border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: ACCENT, space: 6 } },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: DARK, space: 6 } },
     }),
     p(t(intro, { color: MUTED, size: 19, italics: true }), { spacing: { after: 160 }, keepNext: true }),
   ];
@@ -57,7 +61,7 @@ function gridTable(headers, widths, rows, blankRows = 0) {
   const head = new TableRow({
     tableHeader: true,
     children: headers.map((h, i) => cell([p(t(h, { bold: true, color: 'FFFFFF', size: 18 }))], widths[i], {
-      shading: { type: ShadingType.CLEAR, color: 'auto', fill: ACCENT }, borders: { top: none, bottom: none, left: none, right: none },
+      shading: { type: ShadingType.CLEAR, color: 'auto', fill: DARK }, borders: { top: none, bottom: none, left: none, right: none },
     })),
   });
   const body = [...rows, ...Array(blankRows).fill(null)].map((r, ri) => new TableRow({
@@ -204,13 +208,14 @@ const children = [];
 
 // Cover
 children.push(
-  gap(1200),
+  gap(240),
+  p(img('nextwin-logo.png', 400, 78), { spacing: { after: 1200 } }),
   p(t('CLIENT ONBOARDING', { color: ACCENT, bold: true, size: 20, characterSpacing: 120 }), { spacing: { after: 120 } }),
-  p(t('Website & AI Assistant', { bold: true, size: 64, color: DARK })),
-  p(t('Discovery Questionnaire', { size: 64, color: ACCENT }), { spacing: { after: 360 } }),
+  p(t('Website & AI Assistant', { bold: true, size: 60, color: DARK })),
+  p(t('Discovery Questionnaire', { size: 60, color: ACCENT }), { spacing: { after: 360 } }),
   p(t('Everything we need to design, build and launch your new website — plus set up an AI assistant that works with the tools you already use.', { size: 24, color: MUTED }), { spacing: { after: 720 } }),
 );
-const metaW = [2400, 6960];
+const metaW = [2800, 6560];
 children.push(new Table({
   width: { size: W, type: WidthType.DXA }, columnWidths: metaW,
   rows: ['Client / Business', 'Prepared for', 'Date sent', 'Date returned', 'Project #'].map(l => new TableRow({
@@ -282,13 +287,13 @@ children.push(new Table({
 }));
 
 const doc = new Document({
-  creator: 'Website Onboarding', title: 'Website & AI Assistant Discovery Questionnaire',
+  creator: 'NextWin AI', title: 'NextWin AI — Website & AI Assistant Discovery Questionnaire',
   styles: { default: { document: { run: { font: FONT, size: 20, color: DARK } } } },
   sections: [{
     properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1260, bottom: 1080, left: 1440, right: 1440 } }, titlePage: true },
-    headers: { default: new Header({ children: [p([t('Website & AI Assistant Discovery', { size: 16, color: MUTED }), t('\tClient: ________________________', { size: 16, color: MUTED })],
+    headers: { default: new Header({ children: [p([img('nextwin-mark.png', 18, 16), t('  NextWin ', { size: 17, bold: true, color: DARK }), t('AI', { size: 17, bold: true, color: MUTED }), t('   ·   Discovery Questionnaire', { size: 16, color: MUTED }), t('\tClient: ________________________', { size: 16, color: MUTED })],
       { tabStops: [{ type: TabStopType.RIGHT, position: W }] })] }), first: new Header({ children: [p(t(''))] }) },
-    footers: { default: new Footer({ children: [p([t('Confidential — for project planning only', { size: 16, color: MUTED }), new TextRun({ children: ['\tPage ', PageNumber.CURRENT, ' of ', PageNumber.TOTAL_PAGES], size: 16, color: MUTED, font: FONT })],
+    footers: { default: new Footer({ children: [p([t('WORK FLOWS. BUSINESS GROWS.', { size: 15, color: ACCENT, bold: true, characterSpacing: 40 }), t('   ·   Confidential', { size: 16, color: MUTED }), new TextRun({ children: ['\tPage ', PageNumber.CURRENT, ' of ', PageNumber.TOTAL_PAGES], size: 16, color: MUTED, font: FONT })],
       { tabStops: [{ type: TabStopType.RIGHT, position: W }] })] }), first: new Footer({ children: [p(t(''))] }) },
     children,
   }],

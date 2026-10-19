@@ -4,41 +4,54 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>New Client Questionnaire · NextWin</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234F46E5'/><path d='M9 22V10l14 12V10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<title>Client Questionnaire · NextWin AI</title>
+<link rel="icon" href="mark.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
+  /* NextWin AI brand: ink #0A1017, teal #028071, orange #E28820, slate #646B7A */
   :root {
-    --bg: #F7F7FB; --card: #FFFFFF; --ink: #111827; --muted: #6B7280; --line: #E5E7EB;
-    --accent: #4F46E5; --accent-soft: #EEF2FF; --accent-ink: #FFFFFF; --error: #DC2626; --field: #FFFFFF;
+    --bg: #F6F7F8; --card: #FFFFFF; --ink: #0A1017; --muted: #646B7A; --line: #E3E6EA;
+    --accent: #028071; --accent-soft: #E6F2F0; --spark: #E28820; --btn: #0A1017; --btn-ink: #FFFFFF;
+    --error: #C2410C; --field: #FFFFFF; --mark-ink: #0A1017;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #0B0D14; --card: #141826; --ink: #F3F4F6; --muted: #9CA3AF; --line: #262B3D;
-      --accent: #818CF8; --accent-soft: #1E2240; --accent-ink: #0B0D14; --error: #F87171; --field: #0F1320; }
+    :root { --bg: #0A1017; --card: #111923; --ink: #F2F4F6; --muted: #98A0AE; --line: #222C38;
+      --accent: #2BB3A0; --accent-soft: #0F2A28; --spark: #F0A04B; --btn: #2BB3A0; --btn-ink: #0A1017;
+      --error: #FB923C; --field: #0D141C; --mark-ink: #F2F4F6; }
   }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
   .wrap { max-width: 760px; margin: 0 auto; padding: 32px 16px 120px; }
-  header .eyebrow { color: var(--accent); font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
-  header h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.1; margin: 8px 0 10px; letter-spacing: -.02em; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
+  .brand svg { width: 46px; height: auto; flex: none; }
+  .brand b { display: block; font-weight: 800; font-size: 24px; letter-spacing: -.03em; line-height: 1; }
+  .brand b span { color: var(--muted); }
+  .brand small { display: block; color: var(--accent); font-size: 10.5px; letter-spacing: .22em; margin-top: 5px; }
+  header .eyebrow { color: var(--accent); font-weight: 500; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; }
+  header h1 { font-size: clamp(28px, 5vw, 42px); line-height: 1.08; margin: 10px 0 12px; letter-spacing: -.03em; font-weight: 800; }
+  header h1 em { font-style: normal; color: var(--accent); }
   header p { color: var(--muted); margin: 0 0 24px; max-width: 60ch; }
 
   .progress { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 12px 0; }
   .progress-top { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 8px; gap: 12px; }
   .progress-top b { color: var(--ink); font-weight: 600; }
   .bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
-  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width .35s ease; }
+  .bar { overflow: visible; position: relative; }
+  .bar > i { display: block; position: relative; height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width .35s ease; }
+  .bar > i::after { content: ''; position: absolute; right: -6px; top: 50%; width: 8px; height: 8px; transform: translateY(-50%);
+    border-radius: 50%; background: var(--mark-ink); border: 3px solid var(--spark); }
   .steps { display: flex; gap: 6px; margin-top: 10px; overflow-x: auto; scrollbar-width: none; }
   .steps button { flex: none; border: 1px solid var(--line); background: var(--card); color: var(--muted); font: 500 12px Inter, sans-serif;
     padding: 5px 10px; border-radius: 99px; cursor: pointer; white-space: nowrap; }
   .steps button.done { color: var(--ink); }
-  .steps button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .steps button.on { background: var(--btn); border-color: var(--btn); color: var(--btn-ink); }
 
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 28px; margin-top: 12px; }
   @media (max-width: 560px) { .card { padding: 20px 16px; } }
   .card h2 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
-  .card h2 small { color: var(--accent); font-size: 14px; font-weight: 700; margin-right: 10px; }
+  .card h2 small { color: var(--spark); font: 500 14px 'JetBrains Mono', monospace; margin-right: 10px; }
   .card > p.intro { color: var(--muted); margin: 6px 0 20px; }
 
   .field { padding: 18px 0; border-top: 1px solid var(--line); }
@@ -65,7 +78,8 @@
   .nav .inner { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
   .nav .saved { color: var(--muted); font-size: 13px; margin-right: auto; }
   .btn { border: 0; border-radius: 10px; padding: 12px 20px; font: 600 15px Inter, sans-serif; cursor: pointer; }
-  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.primary { background: var(--btn); color: var(--btn-ink); }
+  .btn.primary:hover:not(:disabled) { filter: brightness(1.15); }
   .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
   .btn:disabled { opacity: .5; cursor: default; }
   .hp { position: absolute; left: -9999px; }
@@ -78,8 +92,16 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="eyebrow">NextWin · Client Onboarding</div>
-    <h1>Website &amp; AI Assistant Questionnaire</h1>
+    <div class="brand" aria-label="NextWin AI">
+      <svg viewBox="400 255 470 410" fill="none" aria-hidden="true">
+        <polyline points="455,608 578,398 660,502 805,312" stroke="var(--mark-ink)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="455" cy="608" r="43" fill="var(--mark-ink)"/><circle cx="660" cy="502" r="37" fill="#028071"/>
+        <circle cx="805" cy="312" r="43" fill="#E28820"/><circle cx="805" cy="312" r="19" fill="#0A1017"/>
+      </svg>
+      <div><b>NextWin <span>AI</span></b><small class="mono">WORK FLOWS. BUSINESS GROWS.</small></div>
+    </div>
+    <div class="eyebrow mono">Client onboarding</div>
+    <h1>Website &amp; AI Assistant <em>Discovery Questionnaire</em></h1>
     <p>Everything we need to design your new website and set up an AI assistant that works with the tools you already use. Short answers are fine, and you can skip anything that doesn't apply. Your progress saves automatically on this device. Please don't enter passwords here.</p>
   </header>
 

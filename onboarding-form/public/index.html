@@ -77,7 +77,7 @@
     border-top: 1px solid var(--line); padding: 12px 16px; }
   .nav .inner { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
   .nav .saved { color: var(--muted); font-size: 13px; margin-right: auto; }
-  .btn { border: 0; border-radius: 10px; padding: 12px 20px; font: 600 15px Inter, sans-serif; cursor: pointer; }
+  .btn { border: 0; border-radius: 10px; padding: 12px 20px; white-space: nowrap; font: 600 15px Inter, sans-serif; cursor: pointer; }
   .btn.primary { background: var(--btn); color: var(--btn-ink); }
   .btn.primary:hover:not(:disabled) { filter: brightness(1.15); }
   .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
@@ -86,6 +86,25 @@
 
   .done-card { text-align: center; padding: 56px 28px; }
   .done-card .tick { width: 64px; height: 64px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; margin: 0 auto 16px; font-size: 32px; }
+  .field > label.drop { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; margin-top: 12px; padding: 32px 16px;
+    border: 2px dashed var(--line); border-radius: 14px; background: var(--field); color: var(--muted); cursor: pointer; transition: all .15s; }
+  .drop svg { color: var(--accent); }
+  .drop b { color: var(--ink); font-weight: 600; }
+  .drop b u { color: var(--accent); text-underline-offset: 3px; }
+  .drop span { font-size: 13px; }
+  .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .drop:focus-within { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .file-list { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; }
+  .file-list li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); }
+  .file-list .thumb { width: 40px; height: 40px; border-radius: 8px; flex: none; object-fit: contain; background: var(--accent-soft); color: var(--accent);
+    display: grid; place-items: center; font: 600 10px 'JetBrains Mono', monospace; text-transform: uppercase; }
+  .file-list .meta { flex: 1; min-width: 0; }
+  .file-list .meta b { display: block; font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-list .meta small { color: var(--muted); font-size: 12px; }
+  .file-list button { border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+  .file-list button:hover { color: var(--error); background: var(--accent-soft); }
+  #fileErr { display: block; }
   .alert { margin-top: 12px; padding: 12px 16px; border-radius: 10px; background: color-mix(in srgb, var(--error) 12%, transparent); color: var(--error); display: none; }
 </style>
 </head>
@@ -125,7 +144,7 @@
 </div></div>
 
 <script type="module">
-import { SECTIONS } from './questions.js';
+import { SECTIONS, UPLOAD } from './questions.js';
 
 const DRAFT_KEY = 'nextwin-onboarding-draft';
 const $ = id => document.getElementById(id);
@@ -136,6 +155,16 @@ const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&
 
 function fieldHtml(f) {
   const hint = f.hint ? `<div class="hint">${esc(f.hint)}</div>` : '';
+  if (f.type === 'files') return `<div class="field"><div class="label" id="l_files">${esc(f.label)}</div>${hint}
+    <label class="drop" id="drop" for="fileInput">
+      <input type="file" id="fileInput" multiple accept="${UPLOAD.extensions.map(e => '.' + e).join(',')}" aria-labelledby="l_files">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      <b>Drop files here or <u>browse</u></b>
+      <span>Images, PDF, Word, Excel, PowerPoint, AI/EPS, ZIP · up to ${UPLOAD.maxFileMB} MB each, ${UPLOAD.maxTotalMB} MB total</span>
+    </label>
+    <ul class="file-list" id="fileList"></ul>
+    <div class="err" id="fileErr"></div>
+    <div class="hint" style="margin-top:8px">Files aren't kept in your saved draft, so add them just before you submit.</div></div>`;
   const req = f.required ? ' <span class="req">*</span>' : '';
   if (f.type === 'one' || f.type === 'many') {
     const kind = f.type === 'one' ? 'radio' : 'checkbox';
@@ -159,6 +188,7 @@ $('steps').innerHTML = SECTIONS.map((s, i) => `<button type="button" data-go="${
 function collect() {
   const data = {};
   for (const s of SECTIONS) for (const f of s.fields) {
+    if (f.type === 'files') continue;
     if (f.type === 'many') data[f.id] = [...form.querySelectorAll(`[name="${f.id}"]:checked`)].map(e => e.value);
     else if (f.type === 'one') data[f.id] = form.querySelector(`[name="${f.id}"]:checked`)?.value || '';
     else data[f.id] = form.elements[f.id].value;
@@ -246,10 +276,18 @@ async function submit() {
   const btn = $('next');
   btn.disabled = true; btn.textContent = 'Sending…';
   try {
-    const res = await fetch('/api/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...collect(), website: form.elements.website.value }) });
-    const out = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(out.error || 'Something went wrong — please try again.');
+    const attached = await Promise.all(files.map(async f => ({ name: f.name, data: await toBase64(f) })));
+    const body = JSON.stringify({ ...collect(), files: attached, website: form.elements.website.value });
+    const { status, out } = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/submit');
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.upload.onprogress = e => { if (e.lengthComputable && files.length) btn.textContent = `Uploading ${Math.round(e.loaded / e.total * 100)}%`; };
+      xhr.onload = () => { let out = {}; try { out = JSON.parse(xhr.responseText); } catch {} resolve({ status: xhr.status, out }); };
+      xhr.onerror = () => reject(new Error('Network error — please check your connection and try again.'));
+      xhr.send(body);
+    });
+    if (status < 200 || status >= 300) throw new Error(out.error || 'Something went wrong — please try again.');
     try { localStorage.removeItem(DRAFT_KEY); } catch {}
     $('progress').hidden = true;
     document.querySelector('.nav').hidden = true;
@@ -261,6 +299,62 @@ async function submit() {
     btn.disabled = false; btn.textContent = 'Submit questionnaire';
   }
 }
+
+// ---- Attachments ----
+let files = [];
+const MB = 1024 * 1024;
+const fmtSize = n => n < MB ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / MB).toFixed(1)} MB`;
+
+function addFiles(list) {
+  const errs = [];
+  for (const f of list) {
+    const ext = f.name.split('.').pop().toLowerCase();
+    if (!UPLOAD.extensions.includes(ext)) { errs.push(`${f.name}: file type not supported`); continue; }
+    if (f.size > UPLOAD.maxFileMB * MB) { errs.push(`${f.name}: larger than ${UPLOAD.maxFileMB} MB`); continue; }
+    if (files.length >= UPLOAD.maxFiles) { errs.push(`Only ${UPLOAD.maxFiles} files allowed`); break; }
+    if (files.reduce((t, x) => t + x.size, 0) + f.size > UPLOAD.maxTotalMB * MB) { errs.push(`${f.name}: would exceed ${UPLOAD.maxTotalMB} MB total`); continue; }
+    if (files.some(x => x.name === f.name && x.size === f.size)) continue;
+    files.push(f);
+  }
+  $('fileErr').textContent = errs.join(' · ');
+  renderFiles();
+}
+
+function renderFiles() {
+  const list = $('fileList');
+  list.querySelectorAll('img').forEach(i => URL.revokeObjectURL(i.src));
+  list.innerHTML = '';
+  files.forEach((f, i) => {
+    const li = document.createElement('li');
+    const ext = f.name.split('.').pop();
+    const thumb = /^image\/(png|jpe?g|gif|webp|svg\+xml)$/.test(f.type)
+      ? Object.assign(document.createElement('img'), { src: URL.createObjectURL(f), alt: '' })
+      : Object.assign(document.createElement('div'), { textContent: ext.slice(0, 4) });
+    thumb.className = 'thumb';
+    const meta = document.createElement('div'); meta.className = 'meta';
+    meta.innerHTML = `<b></b><small>${fmtSize(f.size)}</small>`; meta.querySelector('b').textContent = f.name;
+    const rm = Object.assign(document.createElement('button'), { type: 'button', textContent: '×', title: 'Remove' });
+    rm.setAttribute('aria-label', `Remove ${f.name}`);
+    rm.onclick = () => { files.splice(i, 1); renderFiles(); };
+    li.append(thumb, meta, rm); list.append(li);
+  });
+}
+
+const drop = $('drop');
+$('fileInput').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+// Don't let a file dropped beside the drop zone navigate away from the form.
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => e.preventDefault());
+
+const toBase64 = f => new Promise((resolve, reject) => {
+  const r = new FileReader();
+  r.onload = () => resolve(String(r.result).split(',')[1] || '');
+  r.onerror = () => reject(new Error(`Couldn't read ${f.name}`));
+  r.readAsDataURL(f);
+});
 
 restore();
 show(step);

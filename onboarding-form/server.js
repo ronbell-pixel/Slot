@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { SECTIONS } from './public/questions.js';
+import { SECTIONS, UPLOAD } from './public/questions.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(ROOT, 'public');
@@ -11,10 +11,11 @@ const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
 const PORT = Number(process.env.PORT) || 3000;
 const { RESEND_API_KEY, NOTIFY_EMAIL, ADMIN_CODE } = process.env;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'NextWin AI Onboarding <onboarding@resend.dev>';
-const MAX_BODY = 200_000;
+const MAX_BODY = Math.ceil(UPLOAD.maxTotalMB * 1024 * 1024 * 1.4) + 500_000; // base64 overhead + answers
 const MAX_FIELD = 5_000;
 
-const FIELDS = new Map(SECTIONS.flatMap(s => s.fields.map(f => [f.id, f])));
+const FIELDS = new Map(SECTIONS.flatMap(s => s.fields.filter(f => f.type !== 'files').map(f => [f.id, f])));
+const FILES_DIR = path.join(DATA_DIR, 'files');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' };
 
 // Simple per-IP limiter: 10 submissions per hour.
@@ -46,6 +47,32 @@ function clean(input) {
   return out;
 }
 
+// Validate uploaded files ({ name, data: base64 }) against UPLOAD limits.
+function cleanFiles(input) {
+  if (!Array.isArray(input)) return [];
+  if (input.length > UPLOAD.maxFiles) throw new UserError(`Please attach at most ${UPLOAD.maxFiles} files.`);
+  const used = new Set();
+  let total = 0;
+  return input.map(f => {
+    const ext = String(f?.name || '').split('.').pop().toLowerCase();
+    if (!UPLOAD.extensions.includes(ext)) throw new UserError(`"${String(f?.name).slice(0, 80)}" isn't a supported file type.`);
+    const buf = Buffer.from(String(f.data || ''), 'base64');
+    if (!buf.length) throw new UserError(`"${f.name}" is empty.`);
+    if (buf.length > UPLOAD.maxFileMB * 1024 * 1024) throw new UserError(`"${f.name}" is larger than ${UPLOAD.maxFileMB} MB.`);
+    total += buf.length;
+    if (total > UPLOAD.maxTotalMB * 1024 * 1024) throw new UserError(`Attachments add up to more than ${UPLOAD.maxTotalMB} MB.`);
+    // Safe, unique file name: letters, numbers, dot, dash, underscore.
+    let name = String(f.name).normalize('NFKD').replace(/[^\w.\- ]+/g, '').replace(/\s+/g, '_').replace(/^\.+/, '').slice(-100) || `file.${ext}`;
+    for (let n = 2; used.has(name.toLowerCase()); n++) name = name.replace(/(_\d+)?(\.[^.]+)$/, `_${n}$2`);
+    used.add(name.toLowerCase());
+    return { name, buf };
+  });
+}
+
+class UserError extends Error {}
+
+const kb = n => n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`;
+
 function renderHtml(answers, meta) {
   const sections = SECTIONS.map(s => {
     const rows = s.fields.filter(f => answers[f.id]).map(f => {
@@ -60,17 +87,25 @@ function renderHtml(answers, meta) {
     + `<p style="margin:0 0 18px;font:800 18px system-ui,sans-serif;color:#0A1017;letter-spacing:-.02em">NextWin <span style="color:#646B7A">AI</span>`
     + `<span style="display:block;font:500 10px ui-monospace,monospace;letter-spacing:.2em;color:#028071;margin-top:3px">WORK FLOWS. BUSINESS GROWS.</span></p>`
     + `<h1 style="font-size:22px;color:#0A1017;margin:0 0 4px">New client questionnaire: ${esc(answers.business_name || 'Unnamed')}</h1>`
-    + `<p style="color:#646B7A;margin:0">Submitted ${esc(meta.at)} · ID ${esc(meta.id)}</p>${sections}</div>`;
+    + `<p style="color:#646B7A;margin:0">Submitted ${esc(meta.at)} · ID ${esc(meta.id)}</p>${sections}${renderFiles(meta)}</div>`;
 }
 
-function renderText(answers) {
+function renderFiles(meta) {
+  if (!meta.files?.length) return '';
+  const link = f => meta.fileLink ? `<a href="${esc(meta.fileLink(f.name))}" style="color:#028071">${esc(f.name)}</a>` : esc(f.name);
+  return `<h2 style="font:600 15px system-ui,sans-serif;color:#028071;margin:28px 0 8px;border-bottom:2px solid #0A1017;padding-bottom:6px">Attached files (${meta.files.length})</h2>`
+    + `<ul style="margin:0;padding-left:20px;font-size:14px;color:#0A1017">${meta.files.map(f => `<li style="margin:4px 0">${link(f)} <span style="color:#646B7A">· ${kb(f.size)}</span></li>`).join('')}</ul>`;
+}
+
+function renderText(answers, meta) {
+  const files = meta.files?.length ? `\n\n== Attached files ==\n${meta.files.map(f => `${f.name} (${kb(f.size)})`).join('\n')}` : '';
   return SECTIONS.map(s => {
     const lines = s.fields.filter(f => answers[f.id]).map(f => `${f.label}: ${[].concat(answers[f.id]).join(', ')}`);
     return lines.length ? `== ${s.title} ==\n${lines.join('\n')}` : '';
-  }).filter(Boolean).join('\n\n');
+  }).filter(Boolean).join('\n\n') + files;
 }
 
-async function sendEmail(answers, meta) {
+async function sendEmail(answers, meta, files) {
   if (!RESEND_API_KEY || !NOTIFY_EMAIL) return { skipped: true };
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -81,7 +116,8 @@ async function sendEmail(answers, meta) {
       reply_to: answers.contact_email,
       subject: `New client questionnaire: ${answers.business_name || 'Unnamed'}`,
       html: renderHtml(answers, meta),
-      text: renderText(answers),
+      text: renderText(answers, meta),
+      attachments: files.map(f => ({ filename: f.name, content: f.buf.toString('base64') })),
     }),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
@@ -91,8 +127,9 @@ async function sendEmail(answers, meta) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let size = 0; const chunks = [];
-    req.on('data', c => { size += c.length; if (size > MAX_BODY) { reject(new Error('too large')); req.destroy(); } else chunks.push(c); });
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    // Past the limit, keep draining (but discard) so the client still gets our error response.
+    req.on('data', c => { size += c.length; if (size <= MAX_BODY) chunks.push(c); });
+    req.on('end', () => size > MAX_BODY ? reject(new Error('too large')) : resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
 }
@@ -103,29 +140,56 @@ async function handleSubmit(req, res) {
   const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
   if (limited(ip)) return json(res, 429, { error: 'Too many submissions — please try again later.' });
   let input;
-  try { input = JSON.parse(await readBody(req)); } catch { return json(res, 400, { error: 'Invalid submission.' }); }
+  try { input = JSON.parse(await readBody(req)); } catch (e) {
+    return json(res, e.message === 'too large' ? 413 : 400, { error: e.message === 'too large' ? `Attachments are too large (max ${UPLOAD.maxTotalMB} MB total).` : 'Invalid submission.' });
+  }
   if (input.website) return json(res, 200, { ok: true }); // honeypot: bots fill hidden fields
   const answers = clean(input);
+  let files;
+  try { files = cleanFiles(input.files); } catch (e) {
+    if (e instanceof UserError) return json(res, 400, { error: e.message });
+    throw e;
+  }
   if (!answers.business_name || !answers.contact_name || !/^\S+@\S+\.\S+$/.test(answers.contact_email || '')) {
     return json(res, 400, { error: 'Please fill in business name, your name and a valid email.' });
   }
-  const meta = { id: crypto.randomUUID().slice(0, 8), at: new Date().toISOString() };
+  const meta = { id: crypto.randomUUID().slice(0, 8), at: new Date().toISOString(), files: files.map(f => ({ name: f.name, size: f.buf.length })) };
   await fs.mkdir(DATA_DIR, { recursive: true });
+  if (files.length) {
+    const dir = path.join(FILES_DIR, meta.id);
+    await fs.mkdir(dir, { recursive: true });
+    await Promise.all(files.map(f => fs.writeFile(path.join(dir, f.name), f.buf)));
+  }
   await fs.writeFile(path.join(DATA_DIR, `${meta.at.replace(/[:.]/g, '-')}_${meta.id}.json`), JSON.stringify({ ...meta, answers }, null, 2));
-  try { await sendEmail(answers, meta); } catch (e) { console.error('email failed', meta.id, e.message); }
+  try { await sendEmail(answers, meta, files); } catch (e) { console.error('email failed', meta.id, e.message); }
   json(res, 200, { ok: true });
 }
 
 // Backup view of every saved submission: /admin?code=ADMIN_CODE
-async function handleAdmin(req, res, url) {
+function isAdmin(url) {
   const given = Buffer.from(url.searchParams.get('code') || '');
   const want = Buffer.from(ADMIN_CODE || '');
-  if (!ADMIN_CODE || given.length !== want.length || !crypto.timingSafeEqual(given, want)) {
-    res.writeHead(404); return res.end('Not found');
-  }
+  return Boolean(ADMIN_CODE) && given.length === want.length && crypto.timingSafeEqual(given, want);
+}
+
+// Download one attachment: /admin/file?code=…&id=…&name=…
+async function handleAdminFile(res, url) {
+  const id = url.searchParams.get('id') || '', name = url.searchParams.get('name') || '';
+  if (!isAdmin(url) || !/^[0-9a-f]{8}$/.test(id) || !name || name !== path.basename(name)) { res.writeHead(404); return res.end('Not found'); }
+  try {
+    const data = await fs.readFile(path.join(FILES_DIR, id, name));
+    res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'no-store' });
+    res.end(data);
+  } catch { res.writeHead(404); res.end('Not found'); }
+}
+
+async function handleAdmin(req, res, url) {
+  if (!isAdmin(url)) { res.writeHead(404); return res.end('Not found'); }
   const files = (await fs.readdir(DATA_DIR).catch(() => [])).filter(f => f.endsWith('.json')).sort().reverse();
   const items = await Promise.all(files.map(async f => JSON.parse(await fs.readFile(path.join(DATA_DIR, f), 'utf8'))));
-  const body = items.length ? items.map(s => renderHtml(s.answers, s)).join('<hr style="margin:40px 0;border:0;border-top:1px dashed #ccc">') : '<p>No submissions yet.</p>';
+  const code = encodeURIComponent(url.searchParams.get('code'));
+  const withLinks = s => ({ ...s, fileLink: name => `/admin/file?code=${code}&id=${s.id}&name=${encodeURIComponent(name)}` });
+  const body = items.length ? items.map(s => renderHtml(s.answers, withLinks(s))).join('<hr style="margin:40px 0;border:0;border-top:1px dashed #ccc">') : '<p>No submissions yet.</p>';
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' });
   res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Submissions</title><body style="padding:24px;background:#fff">${body}`);
 }
@@ -146,6 +210,7 @@ http.createServer(async (req, res) => {
     if (url.pathname === '/api/health') return json(res, 200, { ok: true });
     if (url.pathname === '/api/submit' && req.method === 'POST') return await handleSubmit(req, res);
     if (url.pathname === '/admin') return await handleAdmin(req, res, url);
+    if (url.pathname === '/admin/file') return await handleAdminFile(res, url);
     if (req.method === 'GET') return await serveStatic(res, url.pathname);
     res.writeHead(405); res.end();
   } catch (e) {

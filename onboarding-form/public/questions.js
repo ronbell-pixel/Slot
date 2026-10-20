@@ -117,4 +117,17 @@ export const SECTIONS = [
     { id: 'review_style', label: 'Review style', type: 'one', options: ['Weekly check-ins', 'Milestone reviews', 'As needed'] },
     { id: 'anything_else', label: 'Anything else we should know?', hint: 'Concerns, past experiences, must-haves', type: 'long' },
   ]},
+  { id: 'notes', title: 'Notes & Files', intro: 'Add anything we missed, and attach files that will help us build your site and train your assistant.', fields: [
+    { id: 'extra_notes', label: 'Extra notes', hint: 'Ideas, links, context, questions for us — anything at all', type: 'long' },
+    { id: 'files', label: 'Attach files', hint: 'Logos, FAQs, price lists, photos, brochures, brand guides', type: 'files' },
+  ]},
 ];
+
+// Upload limits, checked in the browser and again on the server.
+export const UPLOAD = {
+  maxFiles: 20,
+  maxFileMB: 15,
+  maxTotalMB: 30,
+  extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'heic', 'svg', 'ai', 'eps', 'psd', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv',
+    'ppt', 'pptx', 'txt', 'rtf', 'md', 'pages', 'numbers', 'key', 'zip', 'mp4', 'mov'],
+};
